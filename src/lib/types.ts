@@ -11,6 +11,9 @@ export type MealSlot = (typeof MEAL_SLOTS)[number];
 
 export type MealStatus = "planned" | "completed" | "skipped";
 
+/** Which way the user's goal points, derived from start vs goal weight. */
+export type GoalDirection = "gain" | "lose" | "maintain";
+
 /** A selectable food option for a given meal slot. */
 export type MealOption = {
   id: string;
@@ -21,6 +24,8 @@ export type MealOption = {
   kcal: number;
   /** Estimated protein (g) for one planned portion. */
   protein: number;
+  /** Which plan this option belongs to — a surplus plan or a deficit plan. */
+  track: "gain" | "loss";
   /** Human readable planned portion, e.g. "1 plate". */
   portion: string;
   tags?: string[];
@@ -61,7 +66,8 @@ export type Profile = {
   calorieTarget: Range;
   proteinTarget: Range;
   waterTargetMl: Range;
-  weeklyGainTarget: Range;
+  /** Target kg change per week. Negative ranges express a loss goal. */
+  weeklyChangeTarget: Range;
   onboarded: boolean;
 };
 
@@ -89,6 +95,7 @@ export type AppState = {
   reminders: Reminder[];
   /** keyed by YYYY-MM-DD */
   days: Record<string, DayLog>;
-  /** Per-slot option overrides applied to the recurring plan, keyed `${weekday}:${slot}`. */
+  /** Per-slot plan overrides, keyed `${track}:${weekday}:${slot}` so the gain
+   * and loss plans keep separate customisations. */
   planOverrides: Record<string, string>;
 };

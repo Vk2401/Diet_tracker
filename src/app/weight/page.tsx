@@ -5,12 +5,14 @@ import { useStore } from "@/lib/store";
 import { addDays, formatShort, relativeDayLabel, todayKey } from "@/lib/date";
 import { round } from "@/lib/nutrition";
 import {
+  directionOfState,
   progressSummary,
   rollingAverage,
   weekWindow,
   weeklyWeight,
   weightSeries,
 } from "@/lib/stats";
+import { DIRECTION_COPY, formatChange, paceLabel, paceOf, progressSign } from "@/lib/goal";
 import TopBar from "@/components/TopBar";
 import WeightChart from "@/components/WeightChart";
 import { Bar, EmptyState, Pill, SectionTitle, Stat } from "@/components/ui";
@@ -38,10 +40,9 @@ export default function WeightPage() {
     setValue("");
   };
 
-  const weeklyOnTrack =
-    thisWeek.change !== undefined &&
-    thisWeek.change >= state.profile.weeklyGainTarget.min &&
-    thisWeek.change <= state.profile.weeklyGainTarget.max + 0.15;
+  const direction = directionOfState(state);
+  const pace = paceOf(thisWeek.change, state.profile.weeklyChangeTarget, direction);
+  const weeklyOnTrack = pace === "on-pace";
 
   return (
     <div className="safe-bottom">
@@ -159,28 +160,30 @@ export default function WeightPage() {
             />
             <Stat
               label="Weekly change"
-              value={
-                thisWeek.change === undefined
-                  ? "—"
-                  : `${thisWeek.change >= 0 ? "+" : ""}${thisWeek.change.toFixed(2)}`
-              }
+              value={thisWeek.change === undefined ? "—" : formatChange(thisWeek.change)}
               unit="kg"
               tone={weeklyOnTrack ? "brand" : "neutral"}
               sub={
                 thisWeek.change === undefined ? (
-                  "Needs two weeks of data"
+                  paceLabel(pace, direction)
                 ) : weeklyOnTrack ? (
-                  <span style={{ color: "var(--brand)" }}>On target pace</span>
+                  <span style={{ color: "var(--brand)" }}>{paceLabel(pace, direction)}</span>
                 ) : (
-                  `Target ${state.profile.weeklyGainTarget.min}–${state.profile.weeklyGainTarget.max} kg`
+                  `${paceLabel(pace, direction)} · aim ${formatChange(state.profile.weeklyChangeTarget.min)} to ${formatChange(state.profile.weeklyChangeTarget.max)} kg`
                 )
               }
             />
             <Stat
               label="Total change"
-              value={`${summary.totalChange >= 0 ? "+" : ""}${summary.totalChange.toFixed(1)}`}
+              value={formatChange(summary.totalChange, 1)}
               unit="kg"
-              tone={summary.totalChange >= 0 ? "brand" : "danger"}
+              tone={
+                progressSign(summary.totalChange, direction) === 1
+                  ? "brand"
+                  : progressSign(summary.totalChange, direction) === -1
+                    ? "danger"
+                    : "neutral"
+              }
               sub={`since ${formatShort(state.profile.startDate)}`}
             />
           </div>
@@ -204,8 +207,8 @@ export default function WeightPage() {
             <span>{summary.goalWeight} kg goal</span>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-ink-faint">
-            {Math.max(0, summary.remaining).toFixed(1)} kg remaining. Progress is measured from your
-            weekly average — day-to-day swings of ±0.5 kg are normal water weight.
+            {summary.remaining.toFixed(1)} kg {DIRECTION_COPY[direction].remainingVerb}. Progress is
+            measured from your weekly average — day-to-day swings of ±0.5 kg are normal water weight.
           </p>
         </section>
 
@@ -232,10 +235,16 @@ export default function WeightPage() {
                       {delta !== undefined && delta !== 0 && (
                         <span
                           className="num text-xs font-semibold"
-                          style={{ color: delta > 0 ? "var(--brand)" : "var(--danger)" }}
+                          style={{
+                            color:
+                              progressSign(delta, direction) === 1
+                                ? "var(--brand)"
+                                : progressSign(delta, direction) === -1
+                                  ? "var(--danger)"
+                                  : "var(--text-muted)",
+                          }}
                         >
-                          {delta > 0 ? "+" : ""}
-                          {delta.toFixed(1)}
+                          {formatChange(delta, 1)}
                         </span>
                       )}
                       <span className="num text-base font-bold">{p.kg.toFixed(1)} kg</span>

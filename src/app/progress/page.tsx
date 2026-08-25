@@ -16,9 +16,10 @@ import TopBar from "@/components/TopBar";
 import WeightChart from "@/components/WeightChart";
 import { Bar, EmptyState, Pill, Ring, SectionTitle, Stat } from "@/components/ui";
 import { IconBolt, IconDrop, IconFlame, IconTrend } from "@/components/icons";
+import { DIRECTION_COPY, formatChange, progressSign } from "@/lib/goal";
 
 export default function ProgressPage() {
-  const { state } = useStore();
+  const { state, track } = useStore();
   const summary = useMemo(() => progressSummary(state), [state]);
   const series = useMemo(() => weightSeries(state), [state]);
   const averages = useMemo(() => rollingAverage(series), [series]);
@@ -26,9 +27,9 @@ export default function ProgressPage() {
   const last14 = useMemo(() => {
     return lastNDays(todayKey(), 14).map((date) => ({
       date,
-      totals: dayTotals(state.days[date], date, state.planOverrides),
+      totals: dayTotals(state.days[date], date, state.planOverrides, track),
     }));
-  }, [state]);
+  }, [state, track]);
 
   const past = last14.filter((d) => d.date <= todayKey());
   const avgKcal = past.length ? round(past.reduce((a, d) => a + d.totals.kcal, 0) / past.length) : 0;
@@ -83,11 +84,17 @@ export default function ProgressPage() {
               <Row label="Started at" value={`${summary.startWeight} kg`} />
               <Row label="Goal" value={`${summary.goalWeight} kg`} />
               <Row
-                label="Gained"
-                value={`${summary.totalChange >= 0 ? "+" : ""}${summary.totalChange.toFixed(1)} kg`}
-                tone={summary.totalChange >= 0 ? "var(--brand)" : "var(--danger)"}
+                label={DIRECTION_COPY[summary.direction].changeLabel}
+                value={`${formatChange(summary.totalChange, 1)} kg`}
+                tone={
+                  progressSign(summary.totalChange, summary.direction) === 1
+                    ? "var(--brand)"
+                    : progressSign(summary.totalChange, summary.direction) === -1
+                      ? "var(--danger)"
+                      : undefined
+                }
               />
-              <Row label="Remaining" value={`${Math.max(0, summary.remaining).toFixed(1)} kg`} />
+              <Row label="Remaining" value={`${summary.remaining.toFixed(1)} kg`} />
             </dl>
           </div>
           <div className="mt-4">
@@ -230,7 +237,7 @@ export default function ProgressPage() {
 
         {/* ---- Weekly averages ------------------------------------------ */}
         <section>
-          <SectionTitle title="Weekly averages" hint="Week-over-week is how gain is judged" />
+          <SectionTitle title="Weekly averages" hint="Week-over-week is how progress is judged" />
           {fourWeeks.every((f) => f.w.average === undefined) ? (
             <EmptyState
               title="Not enough weigh-ins"
@@ -250,9 +257,16 @@ export default function ProgressPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     {w.change !== undefined && (
-                      <Pill tone={w.change >= 0 ? "brand" : "danger"}>
-                        {w.change >= 0 ? "+" : ""}
-                        {w.change.toFixed(2)} kg
+                      <Pill
+                        tone={
+                          progressSign(w.change, summary.direction) === 1
+                            ? "brand"
+                            : progressSign(w.change, summary.direction) === -1
+                              ? "danger"
+                              : "neutral"
+                        }
+                      >
+                        {formatChange(w.change)} kg
                       </Pill>
                     )}
                     <span className="num text-base font-bold">

@@ -13,16 +13,16 @@ const appFont = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Gain Tracker — Daily Nutrition & Progress",
-    template: "%s · Gain Tracker",
+    default: "Weight Goal Tracker — Daily Nutrition & Progress",
+    template: "%s · Goal Tracker",
   },
   description:
-    "Follow a structured healthy weight-gain plan: track meals, calories, protein, hydration and weekly weight progress.",
+    "Follow a structured meal plan for weight gain or weight loss: track meals, calories, protein, hydration and weekly weight progress.",
   manifest: "/manifest.webmanifest",
-  applicationName: "Gain Tracker",
+  applicationName: "Goal Tracker",
   appleWebApp: {
     capable: true,
-    title: "Gain Tracker",
+    title: "Goal Tracker",
     statusBarStyle: "default",
   },
   icons: {

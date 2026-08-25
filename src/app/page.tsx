@@ -7,6 +7,8 @@ import { addDays, fromKey, nowMinutes, relativeDayLabel, todayKey, weekdayOf } f
 import { dayTotals, resolveEntry, targetState } from "@/lib/nutrition";
 import { SLOT_META } from "@/lib/plan";
 import { progressSummary } from "@/lib/stats";
+import { formatChange, progressSign } from "@/lib/goal";
+import type { GoalDirection } from "@/lib/types";
 import { MEAL_SLOTS, type MealSlot } from "@/lib/types";
 import MealCard from "@/components/MealCard";
 import WaterCard from "@/components/WaterCard";
@@ -23,7 +25,7 @@ import {
 } from "@/components/icons";
 
 export default function TodayPage() {
-  const { state } = useStore();
+  const { state, track } = useStore();
   const [date, setDate] = useState(todayKey());
   const [minutes, setMinutes] = useState(0);
 
@@ -36,8 +38,8 @@ export default function TodayPage() {
 
   const day = state.days[date];
   const totals = useMemo(
-    () => dayTotals(day, date, state.planOverrides),
-    [day, date, state.planOverrides],
+    () => dayTotals(day, date, state.planOverrides, track),
+    [day, date, state.planOverrides, track],
   );
   const summary = useMemo(() => progressSummary(state), [state]);
   const { calorieTarget, proteinTarget } = state.profile;
@@ -45,12 +47,12 @@ export default function TodayPage() {
   const nextSlot = useMemo<MealSlot | undefined>(() => {
     if (date !== todayKey()) return undefined;
     return MEAL_SLOTS.find((slot) => {
-      const entry = resolveEntry(day, date, slot, state.planOverrides);
+      const entry = resolveEntry(day, date, slot, state.planOverrides, track);
       if (entry.status !== "planned") return false;
       const [h, m] = SLOT_META[slot].defaultTime.split(":").map(Number);
       return h * 60 + m >= minutes - 90;
     });
-  }, [day, date, state.planOverrides, minutes]);
+  }, [day, date, state.planOverrides, track, minutes]);
 
   const isToday = date === todayKey();
   const isFuture = date > todayKey();
@@ -189,9 +191,8 @@ export default function TodayPage() {
                 <span className="text-sm font-semibold text-ink-faint"> kg</span>
               </p>
             </div>
-            <Pill tone={summary.totalChange >= 0 ? "brand" : "danger"}>
-              {summary.totalChange >= 0 ? "+" : ""}
-              {summary.totalChange.toFixed(1)} kg
+            <Pill tone={changeTone(summary.totalChange, summary.direction)}>
+              {formatChange(summary.totalChange, 1)} kg
             </Pill>
           </div>
           <div className="mt-3">
@@ -199,7 +200,7 @@ export default function TodayPage() {
           </div>
           <div className="mt-1.5 flex justify-between text-[0.72rem] text-ink-faint">
             <span className="num">{summary.goalProgress.toFixed(0)}% of goal</span>
-            <span className="num">{Math.max(0, summary.remaining).toFixed(1)} kg to go</span>
+            <span className="num">{summary.remaining.toFixed(1)} kg to go</span>
           </div>
         </Link>
 
@@ -220,7 +221,7 @@ export default function TodayPage() {
                 key={slot}
                 date={date}
                 slot={slot}
-                entry={resolveEntry(day, date, slot, state.planOverrides)}
+                entry={resolveEntry(day, date, slot, state.planOverrides, track)}
                 isNext={slot === nextSlot}
               />
             ))}
@@ -241,6 +242,12 @@ export default function TodayPage() {
       </main>
     </div>
   );
+}
+
+/** Green when the change moves toward the goal, red when it moves away. */
+function changeTone(change: number, direction: GoalDirection): "brand" | "danger" | "neutral" {
+  const sign = progressSign(change, direction);
+  return sign === 1 ? "brand" : sign === -1 ? "danger" : "neutral";
 }
 
 function MacroRow({

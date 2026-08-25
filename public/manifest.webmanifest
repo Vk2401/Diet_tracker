@@ -1,7 +1,7 @@
 {
-  "name": "Weight Gain Tracker — Daily Nutrition & Progress",
-  "short_name": "Gain Tracker",
-  "description": "Follow a structured healthy weight-gain plan: track meals, calories, protein, hydration and weekly weight progress.",
+  "name": "Weight Goal Tracker — Daily Nutrition & Progress",
+  "short_name": "Goal Tracker",
+  "description": "Follow a structured meal plan for weight gain or weight loss: track meals, calories, protein, hydration and weekly weight progress.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

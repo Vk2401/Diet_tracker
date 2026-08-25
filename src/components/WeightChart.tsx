@@ -60,7 +60,7 @@ export default function WeightChart({ points, averages, goal, start, height = 20
       label: v.toFixed(1),
     }));
 
-    return { x, y, path, ticks, yMin, yMax, goalInScale };
+    return { x, y, path, ticks, yMin, yMax, goalInScale, goalAbove: goal > hi };
   }, [points, averages, goal, start, H]);
 
   if (!model) return null;
@@ -99,7 +99,8 @@ export default function WeightChart({ points, averages, goal, start, height = 20
         </span>
         <span className="flex items-center gap-1.5 font-semibold text-ink-faint">
           <span className="h-px w-3.5" style={{ background: "var(--chart-goal)" }} />
-          Goal {goal} kg{model.goalInScale ? "" : " (above scale)"}
+          Goal {goal} kg
+          {!model.goalInScale && (model.goalAbove ? " (above scale)" : " (below scale)")}
         </span>
       </figcaption>
 

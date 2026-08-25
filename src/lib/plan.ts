@@ -1,3 +1,4 @@
+import type { PlanTrack } from "./goal";
 import { MEAL_SLOTS, type MealOption, type MealSlot } from "./types";
 
 export const SLOT_META: Record<
@@ -22,6 +23,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "bf-dosa",
     slot: "breakfast",
+    track: "gain",
     label: "3 dosa + sambar + 100 g paneer + full-fat milk",
     items: ["3 dosa", "Sambar", "100 g paneer", "200 ml full-fat milk"],
     kcal: 380,
@@ -32,6 +34,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "bf-idli",
     slot: "breakfast",
+    track: "gain",
     label: "4 idli + sambar + chutney + milk",
     items: ["4 idli", "Sambar", "Coconut chutney", "200 ml milk"],
     kcal: 355,
@@ -42,6 +45,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "bf-oats",
     slot: "breakfast",
+    track: "gain",
     label: "60 g oats + milk + banana + 1 tbsp peanut butter + 2 dates",
     items: ["60 g oats", "200 ml milk", "1 banana", "1 tbsp peanut butter", "2 dates"],
     kcal: 390,
@@ -52,6 +56,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "bf-poha",
     slot: "breakfast",
+    track: "gain",
     label: "Peanut poha + boiled egg + milk",
     items: ["1 bowl poha with peanuts", "1 boiled egg", "200 ml milk"],
     kcal: 370,
@@ -62,6 +67,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "bf-upma",
     slot: "breakfast",
+    track: "gain",
     label: "Vegetable upma + curd + milk",
     items: ["1 bowl vegetable upma", "100 g curd", "200 ml milk"],
     kcal: 350,
@@ -72,6 +78,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "bf-paratha",
     slot: "breakfast",
+    track: "gain",
     label: "2 stuffed paratha + curd + milk",
     items: ["2 paneer/aloo paratha", "100 g curd", "150 ml milk"],
     kcal: 395,
@@ -84,6 +91,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "mm-shake-oats",
     slot: "midMorning",
+    track: "gain",
     label: "Banana–date–oats–peanut butter milk shake",
     items: ["1 banana", "3 dates", "20 g oats", "1 tbsp peanut butter", "250 ml milk"],
     kcal: 320,
@@ -94,6 +102,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "mm-banana-milk",
     slot: "midMorning",
+    track: "gain",
     label: "Banana + milk + 2 dates + peanut butter + 20 g oats",
     items: ["1 banana", "250 ml milk", "2 dates", "1 tbsp peanut butter", "20 g oats"],
     kcal: 330,
@@ -104,6 +113,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "mm-gainer",
     slot: "midMorning",
+    track: "gain",
     label: "Weight-gain shake",
     items: ["250 ml milk", "1 banana", "3 dates", "10 g almonds", "1 tsp ghee"],
     kcal: 315,
@@ -114,6 +124,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "mm-banana-date",
     slot: "midMorning",
+    track: "gain",
     label: "Banana–date milk shake",
     items: ["1 banana", "4 dates", "250 ml milk"],
     kcal: 295,
@@ -124,6 +135,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "mm-nuts",
     slot: "midMorning",
+    track: "gain",
     label: "Mixed nuts + dates + milk",
     items: ["25 g mixed nuts", "3 dates", "200 ml milk"],
     kcal: 310,
@@ -134,6 +146,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "mm-lassi",
     slot: "midMorning",
+    track: "gain",
     label: "Sweet lassi + 10 g almonds",
     items: ["300 ml sweet lassi", "10 g almonds"],
     kcal: 300,
@@ -146,6 +159,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ln-chicken",
     slot: "lunch",
+    track: "gain",
     label: "Rice + dal + 100–120 g chicken + vegetables + curd",
     items: ["1.5 cup rice", "1 katori dal", "100–120 g chicken curry", "Vegetables", "100 g curd"],
     kcal: 420,
@@ -156,6 +170,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ln-rajma",
     slot: "lunch",
+    track: "gain",
     label: "Rice + dal + chickpeas/rajma + vegetables + curd + 1 tsp ghee",
     items: ["1.5 cup rice", "1 katori dal", "1 katori rajma/chana", "Vegetables", "100 g curd", "1 tsp ghee"],
     kcal: 430,
@@ -166,6 +181,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ln-paneer",
     slot: "lunch",
+    track: "gain",
     label: "Rice + dal + paneer + vegetables + curd + 1 tsp ghee",
     items: ["1.5 cup rice", "1 katori dal", "100 g paneer", "Vegetables", "100 g curd", "1 tsp ghee"],
     kcal: 435,
@@ -176,6 +192,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ln-mixed",
     slot: "lunch",
+    track: "gain",
     label: "Rice + rajma/chickpeas + paneer/tofu + vegetables + curd",
     items: ["1.5 cup rice", "1 katori rajma/chana", "80 g paneer or tofu", "Vegetables", "100 g curd"],
     kcal: 440,
@@ -186,6 +203,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ln-chapati",
     slot: "lunch",
+    track: "gain",
     label: "3 chapati + dal + vegetables + curd + salad",
     items: ["3 chapati", "1 katori dal", "Vegetables", "100 g curd", "Salad"],
     kcal: 405,
@@ -196,6 +214,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ln-fish",
     slot: "lunch",
+    track: "gain",
     label: "Rice + dal + fish curry + vegetables + curd",
     items: ["1.5 cup rice", "1 katori dal", "120 g fish curry", "Vegetables", "100 g curd"],
     kcal: 415,
@@ -206,6 +225,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ln-egg",
     slot: "lunch",
+    track: "gain",
     label: "Rice + dal + egg curry (2 eggs) + vegetables + curd",
     items: ["1.5 cup rice", "1 katori dal", "2-egg curry", "Vegetables", "100 g curd"],
     kcal: 425,
@@ -218,6 +238,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ev-paneer-sw",
     slot: "evening",
+    track: "gain",
     label: "Paneer sandwich + fruit",
     items: ["2 slices bread", "60 g paneer filling", "1 fruit"],
     kcal: 235,
@@ -228,6 +249,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ev-paneer-toast",
     slot: "evening",
+    track: "gain",
     label: "Paneer toast + fruit",
     items: ["2 slices toast", "60 g paneer", "1 fruit"],
     kcal: 235,
@@ -238,6 +260,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ev-chikki",
     slot: "evening",
+    track: "gain",
     label: "Peanut chikki + banana + milk",
     items: ["1 peanut chikki", "1 banana", "150 ml milk"],
     kcal: 245,
@@ -248,6 +271,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ev-nuts-curd",
     slot: "evening",
+    track: "gain",
     label: "Nuts + dates + curd",
     items: ["20 g mixed nuts", "3 dates", "150 g curd"],
     kcal: 230,
@@ -258,6 +282,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ev-pb-toast",
     slot: "evening",
+    track: "gain",
     label: "Peanut-butter banana toast",
     items: ["2 slices toast", "1 tbsp peanut butter", "1 banana"],
     kcal: 240,
@@ -268,6 +293,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ev-nuts-banana",
     slot: "evening",
+    track: "gain",
     label: "Nuts + dates + banana + milk",
     items: ["20 g mixed nuts", "2 dates", "1 banana", "150 ml milk"],
     kcal: 250,
@@ -278,6 +304,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "ev-sprouts",
     slot: "evening",
+    track: "gain",
     label: "Sprouts chaat + buttermilk",
     items: ["1 bowl sprouts chaat", "200 ml buttermilk"],
     kcal: 200,
@@ -290,6 +317,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "dn-paneer",
     slot: "dinner",
+    track: "gain",
     label: "3 chapati + 100 g paneer + dal + vegetables + curd",
     items: ["3 chapati", "100 g paneer", "1 katori dal", "Vegetables", "100 g curd"],
     kcal: 410,
@@ -300,6 +328,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "dn-tofu",
     slot: "dinner",
+    track: "gain",
     label: "3 chapati + tofu/paneer + dal + vegetables + curd",
     items: ["3 chapati", "100 g tofu or paneer", "1 katori dal", "Vegetables", "100 g curd"],
     kcal: 400,
@@ -310,6 +339,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "dn-chicken",
     slot: "dinner",
+    track: "gain",
     label: "3 chapati + 100 g chicken + vegetables + curd",
     items: ["3 chapati", "100 g chicken curry", "Vegetables", "100 g curd"],
     kcal: 395,
@@ -320,6 +350,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "dn-chicken-veg",
     slot: "dinner",
+    track: "gain",
     label: "3 chapati + 100–120 g chicken + vegetables + curd",
     items: ["3 chapati", "100–120 g chicken curry", "Vegetables", "100 g curd"],
     kcal: 400,
@@ -330,6 +361,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "dn-rajma",
     slot: "dinner",
+    track: "gain",
     label: "3 chapati + chickpea/rajma curry + vegetables + curd",
     items: ["3 chapati", "1 katori rajma/chana curry", "Vegetables", "100 g curd"],
     kcal: 405,
@@ -340,6 +372,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "dn-khichdi",
     slot: "dinner",
+    track: "gain",
     label: "Vegetable khichdi + curd + 1 tsp ghee",
     items: ["1.5 bowl khichdi", "100 g curd", "1 tsp ghee"],
     kcal: 385,
@@ -352,6 +385,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "bd-milk-dates",
     slot: "bedtime",
+    track: "gain",
     label: "250 ml full-fat milk + 1–2 dates",
     items: ["250 ml full-fat milk", "1–2 dates"],
     kcal: 170,
@@ -362,6 +396,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "bd-milk",
     slot: "bedtime",
+    track: "gain",
     label: "250 ml milk",
     items: ["250 ml full-fat milk"],
     kcal: 150,
@@ -372,6 +407,7 @@ export const MEAL_OPTIONS: MealOption[] = [
   {
     id: "bd-turmeric",
     slot: "bedtime",
+    track: "gain",
     label: "Turmeric milk + 5 almonds",
     items: ["250 ml turmeric milk", "5 almonds"],
     kcal: 180,
@@ -379,14 +415,437 @@ export const MEAL_OPTIONS: MealOption[] = [
     portion: "1 glass",
     tags: ["vegetarian"],
   },
+
+  // ================= WEIGHT-LOSS PLAN =================
+  // A moderate deficit with protein kept high to protect lean mass.
+
+  // ---- Breakfast -------------------------------------------------------
+  {
+    id: "lbf-oats",
+    slot: "breakfast",
+    track: "loss",
+    label: "40 g oats + toned milk + 1 fruit",
+    items: ["40 g oats", "200 ml toned milk", "1 apple or banana"],
+    kcal: 325,
+    protein: 14,
+    portion: "1 bowl",
+    tags: ["vegetarian", "high-fibre"],
+  },
+  {
+    id: "lbf-idli",
+    slot: "breakfast",
+    track: "loss",
+    label: "3 idli + sambar + chutney",
+    items: ["3 idli", "Sambar", "1 tsp coconut chutney"],
+    kcal: 315,
+    protein: 11,
+    portion: "1 plate",
+    tags: ["vegetarian", "south-indian"],
+  },
+  {
+    id: "lbf-chilla",
+    slot: "breakfast",
+    track: "loss",
+    label: "2 moong dal chilla + mint chutney",
+    items: ["2 moong dal chilla", "Mint chutney", "Salad"],
+    kcal: 310,
+    protein: 17,
+    portion: "2 pieces",
+    tags: ["vegetarian", "high-protein"],
+  },
+  {
+    id: "lbf-eggs",
+    slot: "breakfast",
+    track: "loss",
+    label: "3-egg-white omelette + 1 multigrain toast",
+    items: ["3 egg whites + 1 whole egg", "1 multigrain toast", "Sautéed vegetables"],
+    kcal: 320,
+    protein: 22,
+    portion: "1 plate",
+    tags: ["egg", "high-protein"],
+  },
+  {
+    id: "lbf-upma",
+    slot: "breakfast",
+    track: "loss",
+    label: "Vegetable upma + curd",
+    items: ["1 bowl vegetable upma", "100 g curd"],
+    kcal: 320,
+    protein: 12,
+    portion: "1 bowl",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "lbf-poha",
+    slot: "breakfast",
+    track: "loss",
+    label: "Vegetable poha + sprouts",
+    items: ["1 bowl vegetable poha", "1 katori sprouts"],
+    kcal: 315,
+    protein: 12,
+    portion: "1 bowl",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "lbf-dosa",
+    slot: "breakfast",
+    track: "loss",
+    label: "2 plain dosa + sambar + chutney",
+    items: ["2 plain dosa", "Sambar", "1 tsp chutney"],
+    kcal: 330,
+    protein: 10,
+    portion: "1 plate",
+    tags: ["vegetarian", "south-indian"],
+  },
+
+  // ---- Mid-morning -----------------------------------------------------
+  {
+    id: "lmm-buttermilk",
+    slot: "midMorning",
+    track: "loss",
+    label: "Buttermilk + 25 g roasted chana",
+    items: ["250 ml buttermilk", "25 g roasted chana"],
+    kcal: 160,
+    protein: 9,
+    portion: "1 glass + 1 handful",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "lmm-curd",
+    slot: "midMorning",
+    track: "loss",
+    label: "150 g plain curd + flax seeds",
+    items: ["150 g plain curd", "1 tsp flax seeds"],
+    kcal: 150,
+    protein: 10,
+    portion: "1 bowl",
+    tags: ["vegetarian", "high-protein"],
+  },
+  {
+    id: "lmm-sprouts",
+    slot: "midMorning",
+    track: "loss",
+    label: "Small bowl sprouts salad",
+    items: ["1 katori sprouts", "Onion, tomato, lemon"],
+    kcal: 155,
+    protein: 9,
+    portion: "1 small bowl",
+    tags: ["vegetarian", "high-protein"],
+  },
+  {
+    id: "lmm-nuts",
+    slot: "midMorning",
+    track: "loss",
+    label: "Green tea + 8 almonds",
+    items: ["Green tea", "8 almonds"],
+    kcal: 145,
+    protein: 4,
+    portion: "1 cup + 1 handful",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "lmm-fruit",
+    slot: "midMorning",
+    track: "loss",
+    label: "1 fruit + green tea",
+    items: ["1 apple, guava or orange", "Green tea"],
+    kcal: 125,
+    protein: 2,
+    portion: "1 fruit",
+    tags: ["vegetarian", "light"],
+  },
+  {
+    id: "lmm-coconut",
+    slot: "midMorning",
+    track: "loss",
+    label: "Coconut water + 5 almonds",
+    items: ["1 coconut water", "5 almonds"],
+    kcal: 135,
+    protein: 3,
+    portion: "1 glass",
+    tags: ["vegetarian", "light"],
+  },
+
+  // ---- Lunch -----------------------------------------------------------
+  {
+    id: "lln-chicken",
+    slot: "lunch",
+    track: "loss",
+    label: "Brown rice + dal + 120 g grilled chicken + salad",
+    items: ["0.75 cup brown rice", "1 katori dal", "120 g grilled chicken", "Green salad"],
+    kcal: 440,
+    protein: 38,
+    portion: "1 plate",
+    tags: ["non-veg", "high-protein"],
+  },
+  {
+    id: "lln-chapati-dal",
+    slot: "lunch",
+    track: "loss",
+    label: "2 chapati + dal + vegetables + salad + curd",
+    items: ["2 chapati", "1 katori dal", "Vegetables", "Salad", "100 g curd"],
+    kcal: 410,
+    protein: 19,
+    portion: "1 plate",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "lln-rajma",
+    slot: "lunch",
+    track: "loss",
+    label: "2 chapati + rajma/chana + salad + curd",
+    items: ["2 chapati", "1 katori rajma or chana", "Green salad", "100 g curd"],
+    kcal: 425,
+    protein: 21,
+    portion: "1 plate",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "lln-paneer",
+    slot: "lunch",
+    track: "loss",
+    label: "2 chapati + paneer bhurji (low oil) + salad",
+    items: ["2 chapati", "100 g paneer bhurji", "Green salad"],
+    kcal: 430,
+    protein: 25,
+    portion: "1 plate",
+    tags: ["vegetarian", "high-protein"],
+  },
+  {
+    id: "lln-fish",
+    slot: "lunch",
+    track: "loss",
+    label: "1 chapati + grilled fish + sautéed vegetables + salad",
+    items: ["1 chapati", "150 g grilled fish", "Sautéed vegetables", "Salad"],
+    kcal: 430,
+    protein: 34,
+    portion: "1 plate",
+    tags: ["non-veg", "high-protein"],
+  },
+  {
+    id: "lln-egg",
+    slot: "lunch",
+    track: "loss",
+    label: "2 chapati + 2-egg curry (low oil) + salad",
+    items: ["2 chapati", "2-egg curry", "Green salad"],
+    kcal: 420,
+    protein: 23,
+    portion: "1 plate",
+    tags: ["egg"],
+  },
+  {
+    id: "lln-millet",
+    slot: "lunch",
+    track: "loss",
+    label: "Millet khichdi + curd + salad",
+    items: ["1 bowl millet khichdi", "100 g curd", "Green salad"],
+    kcal: 435,
+    protein: 17,
+    portion: "1 bowl",
+    tags: ["vegetarian", "high-fibre"],
+  },
+
+  // ---- Evening ---------------------------------------------------------
+  {
+    id: "lev-makhana",
+    slot: "evening",
+    track: "loss",
+    label: "Roasted makhana + green tea",
+    items: ["30 g roasted makhana", "Green tea"],
+    kcal: 140,
+    protein: 4,
+    portion: "1 bowl",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "lev-chana",
+    slot: "evening",
+    track: "loss",
+    label: "25 g roasted chana + green tea",
+    items: ["25 g roasted chana", "Green tea"],
+    kcal: 135,
+    protein: 7,
+    portion: "1 handful",
+    tags: ["vegetarian", "high-protein"],
+  },
+  {
+    id: "lev-sprouts",
+    slot: "evening",
+    track: "loss",
+    label: "Sprouts chaat",
+    items: ["1 katori sprouts", "Onion, tomato, lemon, chaat masala"],
+    kcal: 150,
+    protein: 8,
+    portion: "1 bowl",
+    tags: ["vegetarian", "high-protein"],
+  },
+  {
+    id: "lev-buttermilk",
+    slot: "evening",
+    track: "loss",
+    label: "Buttermilk + cucumber sticks",
+    items: ["250 ml buttermilk", "Cucumber and carrot sticks"],
+    kcal: 120,
+    protein: 5,
+    portion: "1 glass",
+    tags: ["vegetarian", "light"],
+  },
+  {
+    id: "lev-fruit",
+    slot: "evening",
+    track: "loss",
+    label: "1 fruit + herbal tea",
+    items: ["1 seasonal fruit", "Herbal tea"],
+    kcal: 115,
+    protein: 1,
+    portion: "1 fruit",
+    tags: ["vegetarian", "light"],
+  },
+  {
+    id: "lev-curd",
+    slot: "evening",
+    track: "loss",
+    label: "100 g curd + chia seeds",
+    items: ["100 g plain curd", "1 tsp chia seeds"],
+    kcal: 130,
+    protein: 7,
+    portion: "1 bowl",
+    tags: ["vegetarian"],
+  },
+
+  // ---- Dinner ----------------------------------------------------------
+  {
+    id: "ldn-chapati",
+    slot: "dinner",
+    track: "loss",
+    label: "2 chapati + dal + vegetables + salad",
+    items: ["2 chapati", "1 katori dal", "Vegetables", "Green salad"],
+    kcal: 370,
+    protein: 16,
+    portion: "1 plate",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "ldn-chicken",
+    slot: "dinner",
+    track: "loss",
+    label: "150 g grilled chicken + sautéed vegetables + salad",
+    items: ["150 g grilled chicken", "Sautéed vegetables", "Green salad"],
+    kcal: 360,
+    protein: 34,
+    portion: "1 plate",
+    tags: ["non-veg", "high-protein"],
+  },
+  {
+    id: "ldn-paneer",
+    slot: "dinner",
+    track: "loss",
+    label: "Paneer tikka (100 g) + vegetable soup + salad",
+    items: ["100 g paneer tikka", "1 bowl vegetable soup", "Green salad"],
+    kcal: 370,
+    protein: 23,
+    portion: "1 plate",
+    tags: ["vegetarian", "high-protein"],
+  },
+  {
+    id: "ldn-tofu",
+    slot: "dinner",
+    track: "loss",
+    label: "Tofu stir-fry with vegetables + 1 chapati",
+    items: ["150 g tofu", "Stir-fried vegetables", "1 chapati"],
+    kcal: 370,
+    protein: 21,
+    portion: "1 plate",
+    tags: ["vegetarian", "vegan"],
+  },
+  {
+    id: "ldn-palak",
+    slot: "dinner",
+    track: "loss",
+    label: "2 chapati + palak paneer (low oil) + salad",
+    items: ["2 chapati", "Palak paneer (80 g paneer, low oil)", "Green salad"],
+    kcal: 375,
+    protein: 20,
+    portion: "1 plate",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "ldn-khichdi",
+    slot: "dinner",
+    track: "loss",
+    label: "Moong dal khichdi (light) + curd + salad",
+    items: ["1 bowl moong dal khichdi", "100 g curd", "Green salad"],
+    kcal: 365,
+    protein: 17,
+    portion: "1 bowl",
+    tags: ["vegetarian", "light"],
+  },
+  {
+    id: "ldn-soup",
+    slot: "dinner",
+    track: "loss",
+    label: "Vegetable soup + grilled vegetables + 1 chapati",
+    items: ["1 bowl clear vegetable soup", "Grilled vegetables", "1 chapati"],
+    kcal: 345,
+    protein: 12,
+    portion: "1 plate",
+    tags: ["vegetarian", "light"],
+  },
+
+  // ---- Bedtime ---------------------------------------------------------
+  {
+    id: "lbd-milk",
+    slot: "bedtime",
+    track: "loss",
+    label: "200 ml toned milk",
+    items: ["200 ml toned milk"],
+    kcal: 110,
+    protein: 7,
+    portion: "1 glass",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "lbd-cinnamon",
+    slot: "bedtime",
+    track: "loss",
+    label: "150 ml toned milk + cinnamon",
+    items: ["150 ml toned milk", "A pinch of cinnamon"],
+    kcal: 95,
+    protein: 5,
+    portion: "1 glass",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "lbd-chamomile",
+    slot: "bedtime",
+    track: "loss",
+    label: "Chamomile tea + 6 almonds",
+    items: ["Chamomile tea", "6 almonds"],
+    kcal: 55,
+    protein: 1,
+    portion: "1 cup",
+    tags: ["vegetarian", "light"],
+  },
+  {
+    id: "lbd-herbal",
+    slot: "bedtime",
+    track: "loss",
+    label: "Herbal tea",
+    items: ["Herbal or green tea"],
+    kcal: 10,
+    protein: 0,
+    portion: "1 cup",
+    tags: ["vegetarian", "light"],
+  },
 ];
 
 export const OPTION_BY_ID: Record<string, MealOption> = Object.fromEntries(
   MEAL_OPTIONS.map((o) => [o.id, o]),
 );
 
-export function optionsForSlot(slot: MealSlot): MealOption[] {
-  return MEAL_OPTIONS.filter((o) => o.slot === slot);
+/** Alternatives offered for a slot, scoped to the active plan. */
+export function optionsForSlot(slot: MealSlot, track: PlanTrack = "gain"): MealOption[] {
+  return MEAL_OPTIONS.filter((o) => o.slot === slot && o.track === track);
 }
 
 export const WEEKDAY_NAMES = [
@@ -399,8 +858,8 @@ export const WEEKDAY_NAMES = [
   "Saturday",
 ] as const;
 
-/** Default 7-day plan from the BRD. Index 0 = Sunday … 6 = Saturday. */
-export const DEFAULT_WEEK_PLAN: Record<number, Record<MealSlot, string>> = {
+/** Default 7-day weight-gain plan from the BRD. Index 0 = Sunday … 6 = Saturday. */
+export const GAIN_WEEK_PLAN: Record<number, Record<MealSlot, string>> = {
   0: {
     breakfast: "bf-dosa",
     midMorning: "mm-banana-date",
@@ -459,22 +918,94 @@ export const DEFAULT_WEEK_PLAN: Record<number, Record<MealSlot, string>> = {
   },
 };
 
-/** Planned option id for a weekday + slot, honouring user plan overrides. */
+
+/** Default 7-day weight-loss plan. Index 0 = Sunday … 6 = Saturday. */
+export const LOSS_WEEK_PLAN: Record<number, Record<MealSlot, string>> = {
+  0: {
+    breakfast: "lbf-dosa",
+    midMorning: "lmm-fruit",
+    lunch: "lln-chicken",
+    evening: "lev-curd",
+    dinner: "ldn-tofu",
+    bedtime: "lbd-cinnamon",
+  },
+  1: {
+    breakfast: "lbf-oats",
+    midMorning: "lmm-buttermilk",
+    lunch: "lln-chicken",
+    evening: "lev-makhana",
+    dinner: "ldn-chapati",
+    bedtime: "lbd-milk",
+  },
+  2: {
+    breakfast: "lbf-chilla",
+    midMorning: "lmm-curd",
+    lunch: "lln-rajma",
+    evening: "lev-sprouts",
+    dinner: "ldn-chicken",
+    bedtime: "lbd-cinnamon",
+  },
+  3: {
+    breakfast: "lbf-idli",
+    midMorning: "lmm-sprouts",
+    lunch: "lln-paneer",
+    evening: "lev-chana",
+    dinner: "ldn-khichdi",
+    bedtime: "lbd-milk",
+  },
+  4: {
+    breakfast: "lbf-eggs",
+    midMorning: "lmm-nuts",
+    lunch: "lln-millet",
+    evening: "lev-buttermilk",
+    dinner: "ldn-chicken",
+    bedtime: "lbd-chamomile",
+  },
+  5: {
+    breakfast: "lbf-poha",
+    midMorning: "lmm-buttermilk",
+    lunch: "lln-fish",
+    evening: "lev-makhana",
+    dinner: "ldn-paneer",
+    bedtime: "lbd-milk",
+  },
+  6: {
+    breakfast: "lbf-upma",
+    midMorning: "lmm-curd",
+    lunch: "lln-egg",
+    evening: "lev-chana",
+    dinner: "ldn-palak",
+    bedtime: "lbd-cinnamon",
+  },
+};
+
+export const WEEK_PLANS: Record<PlanTrack, Record<number, Record<MealSlot, string>>> = {
+  gain: GAIN_WEEK_PLAN,
+  loss: LOSS_WEEK_PLAN,
+};
+
+export function overrideKey(track: PlanTrack, weekday: number, slot: MealSlot): string {
+  return `${track}:${weekday}:${slot}`;
+}
+
+/** Planned option id for a weekday + slot on a track, honouring user overrides. */
 export function plannedOptionId(
+  track: PlanTrack,
   weekday: number,
   slot: MealSlot,
   overrides: Record<string, string> = {},
 ): string {
-  return overrides[`${weekday}:${slot}`] ?? DEFAULT_WEEK_PLAN[weekday][slot];
+  return overrides[overrideKey(track, weekday, slot)] ?? WEEK_PLANS[track][weekday][slot];
 }
 
 export function plannedDayTotals(
+  track: PlanTrack,
   weekday: number,
   overrides: Record<string, string> = {},
 ): { kcal: number; protein: number } {
   return MEAL_SLOTS.reduce(
     (acc, slot) => {
-      const opt = OPTION_BY_ID[plannedOptionId(weekday, slot, overrides)];
+      const opt = OPTION_BY_ID[plannedOptionId(track, weekday, slot, overrides)];
       return { kcal: acc.kcal + (opt?.kcal ?? 0), protein: acc.protein + (opt?.protein ?? 0) };
     },
     { kcal: 0, protein: 0 },

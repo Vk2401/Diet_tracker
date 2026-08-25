@@ -1,4 +1,5 @@
 import { OPTION_BY_ID, plannedOptionId } from "./plan";
+import type { PlanTrack } from "./goal";
 import { weekdayOf } from "./date";
 import { MEAL_SLOTS, type DayLog, type MealEntry, type MealSlot, type Range } from "./types";
 
@@ -27,10 +28,11 @@ export function resolveEntry(
   date: string,
   slot: MealSlot,
   planOverrides: Record<string, string>,
+  track: PlanTrack = "gain",
 ): MealEntry {
   const logged = day?.meals?.[slot];
   if (logged) return logged;
-  return makeEntry(plannedOptionId(weekdayOf(date), slot, planOverrides));
+  return makeEntry(plannedOptionId(track, weekdayOf(date), slot, planOverrides));
 }
 
 export type DayTotals = {
@@ -48,6 +50,7 @@ export function dayTotals(
   day: DayLog | undefined,
   date: string,
   planOverrides: Record<string, string>,
+  track: PlanTrack = "gain",
 ): DayTotals {
   let kcal = 0;
   let protein = 0;
@@ -55,7 +58,7 @@ export function dayTotals(
   let skipped = 0;
 
   for (const slot of MEAL_SLOTS) {
-    const entry = resolveEntry(day, date, slot, planOverrides);
+    const entry = resolveEntry(day, date, slot, planOverrides, track);
     if (entry.status === "completed") {
       const n = entryNutrition(entry);
       kcal += n.kcal;

@@ -7,18 +7,27 @@ import { todayKey } from "@/lib/date";
 import { usePwa } from "@/components/PwaProvider";
 import TopBar from "@/components/TopBar";
 import { SectionTitle } from "@/components/ui";
-import { IconCheck, IconDownload, IconInstall, IconUpload } from "@/components/icons";
+import { IconCheck, IconDownload, IconInstall, IconTrend, IconUpload } from "@/components/icons";
+import { DIRECTION_COPY, RECOMMENDED_TARGETS, directionOf } from "@/lib/goal";
 import type { Settings } from "@/lib/types";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { state, setProfile, setSettings, resetAll, importState } = useStore();
+  const { state, setProfile, setSettings, resetTargetsForGoal, resetAll, importState } = useStore();
   const { canInstall, isStandalone, promptInstall } = usePwa();
   const fileRef = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [message, setMessage] = useState("");
 
   const p = state.profile;
+  const direction = directionOf(p.startWeightKg, p.goalWeightKg);
+  const copy = DIRECTION_COPY[direction];
+  const recommended = RECOMMENDED_TARGETS[direction];
+  const targetsMatchGoal =
+    p.calorieTarget.min === recommended.calorieTarget.min &&
+    p.calorieTarget.max === recommended.calorieTarget.max &&
+    p.proteinTarget.min === recommended.proteinTarget.min &&
+    p.weeklyChangeTarget.min === recommended.weeklyChangeTarget.min;
 
   const num = (v: string, fallback: number) => {
     const n = Number.parseFloat(v);
@@ -94,14 +103,35 @@ export default function SettingsPage() {
               />
             </Field>
           </div>
-          <p className="mt-3 text-xs text-ink-faint">
+          <div
+            className="mt-3 flex items-center gap-2 rounded-[12px] p-2.5"
+            style={{ background: "var(--brand-soft)" }}
+          >
+            <IconTrend width={15} height={15} style={{ color: "var(--brand)" }} />
+            <p className="flex-1 text-xs font-semibold" style={{ color: "var(--brand)" }}>
+              {copy.label} goal
+              {direction !== "maintain" &&
+                ` · ${Math.abs(p.goalWeightKg - p.startWeightKg).toFixed(1)} kg ${copy.remainingVerb}`}
+            </p>
+          </div>
+          <p className="mt-2 text-xs text-ink-faint">
+            Set the goal above or below your starting weight — the plan and targets follow it.
             Changing your starting weight recalculates goal progress across all history.
           </p>
         </section>
 
         {/* ---- Targets ---------------------------------------------------- */}
         <section className="card p-4">
-          <SectionTitle title="Daily targets" />
+          <SectionTitle title="Daily targets" hint={`Recommended for a ${copy.label.toLowerCase()} goal`} />
+          {!targetsMatchGoal && (
+            <button
+              onClick={resetTargetsForGoal}
+              className="btn btn-ghost mb-3 w-full justify-start !py-2 !text-xs"
+            >
+              <IconTrend width={14} height={14} />
+              Use recommended targets for {copy.label.toLowerCase()}
+            </button>
+          )}
           <div className="space-y-3.5">
             <RangeField
               label="Calories"
@@ -128,13 +158,16 @@ export default function SettingsPage() {
               onChange={(min, max) => setProfile({ waterTargetMl: { min, max } })}
             />
             <RangeField
-              label="Weekly gain"
+              label="Weekly change"
               unit="kg"
-              min={p.weeklyGainTarget.min}
-              max={p.weeklyGainTarget.max}
+              min={p.weeklyChangeTarget.min}
+              max={p.weeklyChangeTarget.max}
               step={0.05}
-              onChange={(min, max) => setProfile({ weeklyGainTarget: { min, max } })}
+              onChange={(min, max) => setProfile({ weeklyChangeTarget: { min, max } })}
             />
+            <p className="text-xs leading-relaxed text-ink-faint">
+              Use negative numbers for a loss goal — e.g. −0.5 to −0.25 kg a week.
+            </p>
           </div>
         </section>
 

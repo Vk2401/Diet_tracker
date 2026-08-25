@@ -8,10 +8,13 @@ import {
   SLOT_META,
   WEEKDAY_NAMES,
   optionsForSlot,
+  overrideKey,
   plannedDayTotals,
   plannedOptionId,
 } from "@/lib/plan";
 import { MEAL_SLOTS, type MealSlot } from "@/lib/types";
+import { DIRECTION_COPY } from "@/lib/goal";
+import { directionOfState } from "@/lib/stats";
 import TopBar from "@/components/TopBar";
 import { Pill } from "@/components/ui";
 import { IconCheck, IconClose, IconSwap } from "@/components/icons";
@@ -19,19 +22,19 @@ import { IconCheck, IconClose, IconSwap } from "@/components/icons";
 const ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday-first
 
 export default function PlanPage() {
-  const { state, setPlanOverride, resetPlanOverrides } = useStore();
+  const { state, track, setPlanOverride, resetPlanOverrides } = useStore();
   const [weekday, setWeekday] = useState(weekdayOf(todayKey()));
   const [editing, setEditing] = useState<MealSlot | null>(null);
 
-  const totals = plannedDayTotals(weekday, state.planOverrides);
+  const totals = plannedDayTotals(track, weekday, state.planOverrides);
   const { calorieTarget, proteinTarget } = state.profile;
-  const customised = Object.keys(state.planOverrides).length;
+  const customised = Object.keys(state.planOverrides).filter((k) => k.startsWith(`${track}:`)).length;
 
   return (
     <div className="safe-bottom">
       <TopBar
         title="7-day diet plan"
-        subtitle="Your recurring weekly rotation"
+        subtitle={`${DIRECTION_COPY[directionOfState(state)].planName} · recurring weekly`}
         right={
           customised > 0 ? (
             <button
@@ -105,10 +108,10 @@ export default function PlanPage() {
         {/* Meals */}
         <div className="space-y-2.5">
           {MEAL_SLOTS.map((slot, index) => {
-            const optionId = plannedOptionId(weekday, slot, state.planOverrides);
+            const optionId = plannedOptionId(track, weekday, slot, state.planOverrides);
             const option = OPTION_BY_ID[optionId];
             const isEditing = editing === slot;
-            const overridden = !!state.planOverrides[`${weekday}:${slot}`];
+            const overridden = !!state.planOverrides[overrideKey(track, weekday, slot)];
 
             return (
               <section key={slot} className="card overflow-hidden">
@@ -155,7 +158,7 @@ export default function PlanPage() {
                       Alternatives
                     </p>
                     <div className="space-y-1.5">
-                      {optionsForSlot(slot).map((alt) => {
+                      {optionsForSlot(slot, track).map((alt) => {
                         const active = alt.id === optionId;
                         return (
                           <button

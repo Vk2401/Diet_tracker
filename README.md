@@ -1,10 +1,23 @@
-# Gain Tracker
+# Weight Goal Tracker
 
-A mobile-first **Next.js PWA** for the *Healthy Weight-Gain Daily Nutrition & Progress Tracker* BRD (v1.0).
-Follow a structured seven-day diet plan, log six meals a day, and track calories, protein, hydration and
+A mobile-first **Next.js PWA** built from the *Healthy Weight-Gain Daily Nutrition & Progress Tracker*
+BRD (v1.0) and extended to work in **both directions — weight gain and weight loss**. Follow a
+structured seven-day diet plan, log six meals a day, and track calories, protein, hydration and
 weekly weight progress toward a goal.
 
-Default plan: **43 kg → 50 kg**, 1,800–1,950 kcal/day, 65–75 g protein/day, 1.8–2.2 L water/day.
+The goal direction is **derived from your start and goal weight** — set the goal higher to gain,
+lower to lose, or the same to maintain. Everything else follows from it: which meal plan is active,
+the recommended targets, the copy, and whether a given week's change is coloured as progress.
+
+| | Gain | Lose | Maintain |
+|---|---|---|---|
+| Calories | 1,800–1,950 | 1,400–1,600 | 1,900–2,100 |
+| Protein | 65–75 g | 75–95 g | 70–85 g |
+| Water | 1.8–2.2 L | 2.5–3.0 L | 2.0–2.5 L |
+| Weekly change | +0.2 to +0.35 kg | −0.5 to −0.25 kg | ±0.15 kg |
+
+Every target is editable in Settings; a one-tap button re-applies the recommended set for the
+current direction.
 
 ---
 
@@ -24,15 +37,15 @@ Requires Node 18.18+. No API keys, database or backend — the app is entirely c
 
 | Route | Screen | What it does |
 |---|---|---|
-| `/onboarding` | Onboarding | 4 steps: welcome → weights → targets → reminders. Runs once. |
+| `/onboarding` | Onboarding | 4 steps: welcome → weights → targets → reminders. Detects the goal direction as you type and recommends matching targets. Runs once. |
 | `/` | Today's dashboard | Meal adherence ring, calorie/protein bars, weight snapshot, six meal cards, hydration, weigh-in, notes. Steps ±2 days. |
 | `/meal/[date]/[slot]` | Meal detail | Complete/skip, portion multiplier, manual kcal/protein override, swap to an alternative, per-meal notes. |
-| `/plan` | 7-day diet plan | The recurring weekly rotation with per-day totals and swappable alternatives. |
+| `/plan` | 7-day diet plan | The recurring weekly rotation for the active direction, with per-day totals and swappable alternatives. |
 | `/weight` | Weight tracker | Log/edit/remove daily weights, trend chart, weekly averages, goal progress, history. |
 | `/progress` | Progress dashboard | Goal ring, weight trend, 14-day averages, daily calorie bars, week-over-week averages. |
 | `/report` | Weekly adherence report | Meal adherence, weight change, macro & hydration averages, missed meals, best day, improvements. Steps back week by week. |
 | `/reminders` | Reminders | Per-reminder time + on/off, hydration cadence, notification permission. |
-| `/settings` | Settings | Profile, editable targets, theme, glass size, week start, JSON export/import, erase all. |
+| `/settings` | Settings | Profile, goal direction, editable targets, theme, glass size, week start, JSON export/import, erase all. |
 
 ---
 
@@ -45,7 +58,8 @@ src/
                           WeightQuickLog, WeightChart, PwaProvider, ui primitives, icons
   lib/
     types.ts              Domain model
-    plan.ts               Meal-option catalog + the default 7-day plan
+    goal.ts               Goal direction, recommended targets, pace and tone helpers
+    plan.ts               Meal-option catalog + the 7-day gain and loss plans
     defaults.ts           Initial state, default targets and reminders
     store.tsx             React context store, debounced localStorage persistence
     nutrition.ts          Per-entry and per-day nutrition resolution
@@ -60,7 +74,10 @@ public/
 
 ### State and storage
 
-All data lives in `localStorage` under `hwg-tracker-state` — nothing is sent anywhere. Writes are
+All data lives in `localStorage` under `hwg-tracker-state` — nothing is sent anywhere. The key is
+unchanged from v1 so existing installs keep their history; a v1 → v2 migration renames
+`weeklyGainTarget` to `weeklyChangeTarget`, namespaces plan overrides by track, backfills new
+reminders and refreshes reminder wording while preserving each user's times and on/off choices. Writes are
 debounced 200 ms so rapid taps (water, portions) don't thrash storage. Loading is deferred to a
 mount effect so server and client render the same pristine tree, and `AppShell` shows a spinner
 until hydration completes.
@@ -70,28 +87,51 @@ until hydration completes.
 Editing the plan therefore affects future days only — anything already logged keeps its original
 food, portions and nutrition (BRD §14).
 
+### Goal direction
+
+`lib/goal.ts` derives the direction from the two weights (`gain` / `lose` / `maintain`, with a
+0.25 kg dead-band around equal) and exposes everything that depends on it: recommended targets,
+per-direction copy, and two helpers that keep the UI honest in both directions —
+
+- `progressSign(change, direction)` — is this change *toward* the goal? Losing 0.4 kg is green on a
+  loss goal and red on a gain goal, from one place.
+- `paceOf(change, target, direction)` — `on-pace` / `slow` / `fast` / `reverse`. A loss target is
+  simply a negative range, so the same band comparison works unchanged for both.
+
 ### Nutrition model
 
 `lib/plan.ts` holds a catalog of `MealOption`s (label, ingredient breakdown, planned portion,
-estimated kcal/protein), tagged by meal slot. The default week maps each weekday + slot to an
-option; every other option for that slot becomes a one-tap alternative, which covers the BRD's
-substitutions (dosa/idli/oats, paneer/tofu, chicken/chickpeas/rajma/fish/egg, rice/chapati).
+estimated kcal/protein), tagged by meal slot **and track** (`gain` or `loss`). Each track has its
+own 7-day week plan; every other option for that slot *on the same track* becomes a one-tap
+alternative. This covers the BRD's substitutions (dosa/idli/oats, paneer/tofu,
+chicken/chickpeas/rajma/fish/egg, rice/chapati) and keeps a weight-gain shake from ever appearing
+in a weight-loss plan.
 
 Effective nutrition for a logged meal is `override ?? (option value × portion factor)`, so portion
 changes and swaps recalculate automatically while manual entry still wins.
 
-Planned-portion estimates are tuned so each default day lands inside the BRD's 1,800–1,950 kcal
-target (Monday: 1,935 kcal / 82 g protein). **Note:** taken at maximum realistic portions the BRD's
-written plan would exceed its own calorie target, so the estimates assume moderate portions. Every
-target is editable in Settings, and any meal's calories/protein can be overridden directly.
+Planned-portion estimates are tuned so every day of each plan lands inside that plan's calorie
+target — gain averages ~1,919 kcal/day, loss ~1,499 kcal/day, with loss protein kept at 76–95 g to
+protect lean mass. `scripts`-free verification: the plan page shows each day's totals against the
+target band.
+
+**Note:** taken at maximum realistic portions the BRD's written gain plan would exceed its own
+1,800–1,950 kcal target, so the estimates assume moderate portions. Every target is editable in
+Settings, and any meal's calories/protein can be overridden directly.
 
 ### Progress logic
 
-Goal progress follows the BRD formula exactly:
+Goal progress follows the BRD formula exactly, and works unchanged in both directions because both
+numerator and denominator flip sign together:
 
 ```
-(current − start) / (goal − start) × 100      // default: (current − 43) / 7 × 100
+(current − start) / (goal − start) × 100
+
+gain:  (44.6 − 43) / (50 − 43)   × 100 = 23%
+loss:  (99.7 − 102) / (88 − 102) × 100 = 16%
 ```
+
+Distance remaining is reported as an absolute value, so "kg to go" is never negative.
 
 `current` is the most recent logged weight. The weekly average is the primary indicator; the trend
 chart plots daily entries against a 7-day rolling average, and week-over-week change compares this

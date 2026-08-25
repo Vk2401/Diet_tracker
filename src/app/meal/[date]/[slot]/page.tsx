@@ -18,13 +18,13 @@ export default function MealDetailPage({
   params: Promise<{ date: string; slot: string }>;
 }) {
   const { date, slot: rawSlot } = use(params);
-  const { state, setMeal } = useStore();
+  const { state, track, setMeal } = useStore();
 
   const slot = MEAL_SLOTS.includes(rawSlot as MealSlot) ? (rawSlot as MealSlot) : "breakfast";
   const meta = SLOT_META[slot];
-  const entry = resolveEntry(state.days[date], date, slot, state.planOverrides);
+  const entry = resolveEntry(state.days[date], date, slot, state.planOverrides, track);
   const option = OPTION_BY_ID[entry.optionId];
-  const alternatives = useMemo(() => optionsForSlot(slot), [slot]);
+  const alternatives = useMemo(() => optionsForSlot(slot, track), [slot, track]);
   const n = entryNutrition(entry);
   const planned = OPTION_BY_ID[entry.optionId];
 

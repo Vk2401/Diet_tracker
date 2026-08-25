@@ -1,12 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 import { todayKey } from "@/lib/date";
+import type { GoalDirection } from "@/lib/types";
 import { requestPermission } from "@/lib/notifications";
 import { DEFAULT_PROFILE } from "@/lib/defaults";
 import { plannedDayTotals } from "@/lib/plan";
+import { DIRECTION_COPY, RECOMMENDED_TARGETS, directionOf, trackOf } from "@/lib/goal";
 import { IconBell, IconCheck, IconChevronLeft, IconSparkle } from "@/components/icons";
 import { Bar } from "@/components/ui";
 
@@ -18,15 +20,11 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
 
   const [name, setName] = useState(state.profile.name);
-  const [start, setStart] = useState(String(state.profile.startWeightKg));
-  const [goal, setGoal] = useState(String(state.profile.goalWeightKg));
+  const [start, setStart] = useState("");
+  const [goal, setGoal] = useState("");
   const [height, setHeight] = useState(state.profile.heightCm ? String(state.profile.heightCm) : "");
-  const [kcalMin, setKcalMin] = useState(String(state.profile.calorieTarget.min));
-  const [kcalMax, setKcalMax] = useState(String(state.profile.calorieTarget.max));
-  const [proMin, setProMin] = useState(String(state.profile.proteinTarget.min));
-  const [proMax, setProMax] = useState(String(state.profile.proteinTarget.max));
-  const [waterMin, setWaterMin] = useState(String(state.profile.waterTargetMl.min / 1000));
-  const [waterMax, setWaterMax] = useState(String(state.profile.waterTargetMl.max / 1000));
+  const [targets, setTargets] = useState(RECOMMENDED_TARGETS.gain);
+  const [targetsTouched, setTargetsTouched] = useState(false);
   const [notifyState, setNotifyState] = useState<string>("");
 
   const num = (s: string, fallback: number) => {
@@ -36,10 +34,31 @@ export default function OnboardingPage() {
 
   const startKg = num(start, DEFAULT_PROFILE.startWeightKg);
   const goalKg = num(goal, DEFAULT_PROFILE.goalWeightKg);
-  const delta = goalKg - startKg;
-  const weeksMin = delta > 0 ? Math.ceil(delta / 0.35) : 0;
-  const weeksMax = delta > 0 ? Math.ceil(delta / 0.2) : 0;
-  const weightsValid = startKg > 20 && startKg < 250 && goalKg > startKg && goalKg < 250;
+  const direction = directionOf(startKg, goalKg);
+  const copy = DIRECTION_COPY[direction];
+  const recommended = RECOMMENDED_TARGETS[direction];
+  const delta = Math.abs(goalKg - startKg);
+
+  // Pace is whichever end of the recommended band moves fastest/slowest.
+  const paceFast = Math.max(
+    Math.abs(recommended.weeklyChangeTarget.min),
+    Math.abs(recommended.weeklyChangeTarget.max),
+  );
+  const paceSlow = Math.min(
+    Math.abs(recommended.weeklyChangeTarget.min),
+    Math.abs(recommended.weeklyChangeTarget.max),
+  );
+  const weeksMin = delta > 0 && paceFast > 0 ? Math.ceil(delta / paceFast) : 0;
+  const weeksMax = delta > 0 && paceSlow > 0 ? Math.ceil(delta / paceSlow) : 0;
+
+  // Only the numbers themselves need to be sane — either direction is a valid goal.
+  const inRange = (n: number) => n >= 20 && n <= 300;
+  const weightsValid =
+    start.trim() !== "" && goal.trim() !== "" && inRange(startKg) && inRange(goalKg);
+
+  useEffect(() => {
+    if (!targetsTouched) setTargets(RECOMMENDED_TARGETS[direction]);
+  }, [direction, targetsTouched]);
 
   const finish = () => {
     setProfile({
@@ -48,12 +67,7 @@ export default function OnboardingPage() {
       goalWeightKg: goalKg,
       heightCm: height ? num(height, 0) || undefined : undefined,
       startDate: todayKey(),
-      calorieTarget: { min: num(kcalMin, 1800), max: num(kcalMax, 1950) },
-      proteinTarget: { min: num(proMin, 65), max: num(proMax, 75) },
-      waterTargetMl: {
-        min: Math.round(num(waterMin, 1.8) * 1000),
-        max: Math.round(num(waterMax, 2.2) * 1000),
-      },
+      ...targets,
       onboarded: true,
     });
     router.replace("/");
@@ -124,6 +138,7 @@ export default function OnboardingPage() {
                     step="0.1"
                     value={start}
                     onChange={(e) => setStart(e.target.value)}
+                    placeholder="—"
                     className="field num pr-9 font-bold"
                   />
                 </Field>
@@ -134,6 +149,7 @@ export default function OnboardingPage() {
                     step="0.1"
                     value={goal}
                     onChange={(e) => setGoal(e.target.value)}
+                    placeholder="—"
                     className="field num pr-9 font-bold"
                   />
                 </Field>
@@ -149,20 +165,30 @@ export default function OnboardingPage() {
                 />
               </Field>
 
-              {weightsValid && (
+              {weightsValid && direction !== "maintain" && (
                 <div className="card p-3.5" style={{ background: "var(--brand-soft)", borderColor: "transparent" }}>
                   <p className="text-sm font-semibold" style={{ color: "var(--brand)" }}>
-                    {delta.toFixed(1)} kg to gain
+                    {delta.toFixed(1)} kg {copy.remainingVerb}
                   </p>
                   <p className="mt-1 text-xs" style={{ color: "var(--brand)" }}>
-                    At a healthy 0.2–0.35 kg per week that is roughly {weeksMin}–{weeksMax} weeks of
-                    consistent tracking. Steady beats fast.
+                    {copy.weeklyHint} That is roughly {weeksMin}–{weeksMax} weeks of consistent
+                    tracking. Steady beats fast.
                   </p>
                 </div>
               )}
-              {!weightsValid && (
+              {weightsValid && direction === "maintain" && (
+                <div className="card p-3.5" style={{ background: "var(--brand-soft)", borderColor: "transparent" }}>
+                  <p className="text-sm font-semibold" style={{ color: "var(--brand)" }}>
+                    Holding at {goalKg.toFixed(1)} kg
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: "var(--brand)" }}>
+                    {copy.weeklyHint} We&apos;ll track the weekly average so drift shows up early.
+                  </p>
+                </div>
+              )}
+              {!weightsValid && (start.trim() !== "" || goal.trim() !== "") && (
                 <p className="text-xs" style={{ color: "var(--danger)" }}>
-                  Goal weight needs to be higher than your starting weight.
+                  Enter both weights, between 20 and 300 kg.
                 </p>
               )}
             </Step>
@@ -171,36 +197,54 @@ export default function OnboardingPage() {
           {step === 2 && (
             <Step
               title="Daily targets"
-              body="These defaults come from the plan. Adjust the ranges if a dietitian has given you different numbers."
+              body={`These are the recommended ranges for a ${copy.label.toLowerCase()} goal. Adjust them if a dietitian has given you different numbers.`}
             >
               <RangeField
                 label="Calories"
                 unit="kcal / day"
-                min={kcalMin}
-                max={kcalMax}
-                onMin={setKcalMin}
-                onMax={setKcalMax}
+                min={String(targets.calorieTarget.min)}
+                max={String(targets.calorieTarget.max)}
+                onMin={(v) => {
+                  setTargetsTouched(true);
+                  setTargets((t) => ({ ...t, calorieTarget: { ...t.calorieTarget, min: num(v, t.calorieTarget.min) } }));
+                }}
+                onMax={(v) => {
+                  setTargetsTouched(true);
+                  setTargets((t) => ({ ...t, calorieTarget: { ...t.calorieTarget, max: num(v, t.calorieTarget.max) } }));
+                }}
                 step="10"
               />
               <RangeField
                 label="Protein"
                 unit="g / day"
-                min={proMin}
-                max={proMax}
-                onMin={setProMin}
-                onMax={setProMax}
+                min={String(targets.proteinTarget.min)}
+                max={String(targets.proteinTarget.max)}
+                onMin={(v) => {
+                  setTargetsTouched(true);
+                  setTargets((t) => ({ ...t, proteinTarget: { ...t.proteinTarget, min: num(v, t.proteinTarget.min) } }));
+                }}
+                onMax={(v) => {
+                  setTargetsTouched(true);
+                  setTargets((t) => ({ ...t, proteinTarget: { ...t.proteinTarget, max: num(v, t.proteinTarget.max) } }));
+                }}
                 step="1"
               />
               <RangeField
                 label="Water"
                 unit="L / day"
-                min={waterMin}
-                max={waterMax}
-                onMin={setWaterMin}
-                onMax={setWaterMax}
+                min={String(targets.waterTargetMl.min / 1000)}
+                max={String(targets.waterTargetMl.max / 1000)}
+                onMin={(v) => {
+                  setTargetsTouched(true);
+                  setTargets((t) => ({ ...t, waterTargetMl: { ...t.waterTargetMl, min: Math.round(num(v, 1.8) * 1000) } }));
+                }}
+                onMax={(v) => {
+                  setTargetsTouched(true);
+                  setTargets((t) => ({ ...t, waterTargetMl: { ...t.waterTargetMl, max: Math.round(num(v, 2.2) * 1000) } }));
+                }}
                 step="0.1"
               />
-              <PlanPreview />
+              <PlanPreview direction={direction} />
             </Step>
           )}
 
@@ -277,17 +321,18 @@ function Welcome() {
         <IconSparkle width={30} height={30} />
       </span>
       <h1 className="mt-6 text-[2.1rem] font-extrabold leading-[1.1] tracking-tight">
-        Gain weight the
+        Reach your weight
         <br />
-        steady way.
+        goal, steadily.
       </h1>
       <p className="mt-4 text-[0.95rem] leading-relaxed text-ink-muted">
-        A structured seven-day meal plan, six meals a day, and the four numbers that actually move
-        the needle: calories, protein, water and your weekly weight average.
+        Gaining or losing, it works the same way: a structured seven-day meal plan, six meals a day,
+        and the four numbers that actually move the needle — calories, protein, water and your
+        weekly weight average.
       </p>
       <ul className="mt-7 space-y-3">
         {[
-          ["Follow the plan", "A ready-made 7-day rotation with swappable alternatives."],
+          ["Follow the plan", "A ready-made 7-day rotation, matched to your goal, with swappable alternatives."],
           ["Log in seconds", "Tap to complete a meal — calories and protein add themselves."],
           ["Watch the trend", "Weekly averages, not daily noise, tell you if it's working."],
         ].map(([t, d]) => (
@@ -407,14 +452,15 @@ function RangeField({
   );
 }
 
-function PlanPreview() {
-  const weekly = Array.from({ length: 7 }, (_, i) => plannedDayTotals(i));
+function PlanPreview({ direction }: { direction: GoalDirection }) {
+  const track = trackOf(direction);
+  const weekly = Array.from({ length: 7 }, (_, i) => plannedDayTotals(track, i));
   const avgKcal = Math.round(weekly.reduce((a, d) => a + d.kcal, 0) / 7);
   const avgPro = Math.round(weekly.reduce((a, d) => a + d.protein, 0) / 7);
   return (
     <div className="card p-3.5">
       <p className="text-[0.72rem] font-semibold uppercase tracking-wider text-ink-faint">
-        Default plan delivers
+        {DIRECTION_COPY[direction].planName} delivers
       </p>
       <div className="mt-2 flex items-baseline gap-4">
         <p className="num text-lg font-bold">

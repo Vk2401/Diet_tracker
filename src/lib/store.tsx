@@ -10,10 +10,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { RECOMMENDED_TARGETS } from "./goal";
 import { STORAGE_KEY, STATE_VERSION, makeInitialState } from "./defaults";
 import { todayKey } from "./date";
 import { makeEntry } from "./nutrition";
-import { plannedOptionId } from "./plan";
+import { overrideKey, plannedOptionId } from "./plan";
+import { directionOf, trackOf, type PlanTrack } from "./goal";
 import { weekdayOf } from "./date";
 import type {
   AppState,
@@ -28,6 +30,8 @@ import type {
 type Ctx = {
   state: AppState;
   hydrated: boolean;
+  /** Which meal plan the current start/goal weights imply. */
+  track: PlanTrack;
   update: (fn: (draft: AppState) => void) => void;
   getDay: (date: string) => DayLog;
   setMeal: (date: string, slot: MealSlot, patch: Partial<MealEntry>) => void;
@@ -40,6 +44,7 @@ type Ctx = {
   setSettings: (patch: Partial<Settings>) => void;
   setReminder: (id: string, patch: Partial<Reminder>) => void;
   setPlanOverride: (weekday: number, slot: MealSlot, optionId: string) => void;
+  resetTargetsForGoal: () => void;
   resetPlanOverrides: () => void;
   resetAll: () => void;
   importState: (json: string) => { ok: boolean; error?: string };
@@ -51,19 +56,43 @@ function emptyDay(date: string): DayLog {
   return { date, meals: {}, waterMl: 0 };
 }
 
+type LegacyProfile = Partial<Profile> & { weeklyGainTarget?: Profile["weeklyChangeTarget"] };
+
 function migrate(raw: unknown): AppState {
   const base = makeInitialState();
   if (!raw || typeof raw !== "object") return base;
-  const parsed = raw as Partial<AppState>;
+  const parsed = raw as Partial<AppState> & { profile?: LegacyProfile };
+  const version = typeof parsed.version === "number" ? parsed.version : 1;
+
+  const legacy: LegacyProfile = parsed.profile ?? {};
+  const { weeklyGainTarget, ...storedProfile } = legacy;
+  const profile: Profile = {
+    ...base.profile,
+    ...storedProfile,
+    // v1 called this weeklyGainTarget and only ever held a gain range.
+    weeklyChangeTarget:
+      storedProfile.weeklyChangeTarget ?? weeklyGainTarget ?? base.profile.weeklyChangeTarget,
+  };
+
+  // v1 overrides were keyed `weekday:slot` and always belonged to the gain plan.
+  let planOverrides = parsed.planOverrides ?? {};
+  if (version < 2) {
+    planOverrides = Object.fromEntries(
+      Object.entries(planOverrides).map(([k, v]) => [k.includes(":") && k.split(":").length === 2 ? `gain:${k}` : k, v]),
+    );
+  }
+
   return {
     version: STATE_VERSION,
-    profile: { ...base.profile, ...(parsed.profile ?? {}) },
+    profile,
     settings: { ...base.settings, ...(parsed.settings ?? {}) },
-    reminders: base.reminders.map(
-      (r) => parsed.reminders?.find((x) => x.id === r.id) ?? r,
-    ),
+    // Keep the user's schedule but always take the current wording.
+    reminders: base.reminders.map((r) => {
+      const stored = parsed.reminders?.find((x) => x.id === r.id);
+      return stored ? { ...r, ...stored, label: r.label } : r;
+    }),
     days: parsed.days ?? {},
-    planOverrides: parsed.planOverrides ?? {},
+    planOverrides,
   };
 }
 
@@ -99,6 +128,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
   }, [state, hydrated]);
 
+  const track = trackOf(directionOf(state.profile.startWeightKg, state.profile.goalWeightKg));
+
   const update = useCallback((fn: (draft: AppState) => void) => {
     setState((prev) => {
       const draft: AppState = structuredClone(prev);
@@ -116,8 +147,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     (date: string, slot: MealSlot, patch: Partial<MealEntry>) => {
       update((d) => {
         const day = (d.days[date] ??= emptyDay(date));
+        const t = trackOf(directionOf(d.profile.startWeightKg, d.profile.goalWeightKg));
         const existing =
-          day.meals[slot] ?? makeEntry(plannedOptionId(weekdayOf(date), slot, d.planOverrides));
+          day.meals[slot] ?? makeEntry(plannedOptionId(t, weekdayOf(date), slot, d.planOverrides));
         day.meals[slot] = { ...existing, ...patch };
       });
     },
@@ -128,8 +160,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     (date: string, slot: MealSlot) => {
       update((d) => {
         const day = (d.days[date] ??= emptyDay(date));
+        const t = trackOf(directionOf(d.profile.startWeightKg, d.profile.goalWeightKg));
         const existing =
-          day.meals[slot] ?? makeEntry(plannedOptionId(weekdayOf(date), slot, d.planOverrides));
+          day.meals[slot] ?? makeEntry(plannedOptionId(t, weekdayOf(date), slot, d.planOverrides));
         const next =
           existing.status === "planned"
             ? "completed"
@@ -208,7 +241,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const setPlanOverride = useCallback(
     (weekday: number, slot: MealSlot, optionId: string) =>
       update((d) => {
-        d.planOverrides[`${weekday}:${slot}`] = optionId;
+        const t = trackOf(directionOf(d.profile.startWeightKg, d.profile.goalWeightKg));
+        d.planOverrides[overrideKey(t, weekday, slot)] = optionId;
+      }),
+    [update],
+  );
+
+  /** Re-applies the recommended targets for the current goal direction. */
+  const resetTargetsForGoal = useCallback(
+    () =>
+      update((d) => {
+        Object.assign(
+          d.profile,
+          RECOMMENDED_TARGETS[directionOf(d.profile.startWeightKg, d.profile.goalWeightKg)],
+        );
       }),
     [update],
   );
@@ -243,6 +289,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () => ({
       state,
       hydrated,
+      track,
       update,
       getDay,
       setMeal,
@@ -255,6 +302,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSettings,
       setReminder,
       setPlanOverride,
+      resetTargetsForGoal,
       resetPlanOverrides,
       resetAll,
       importState,
@@ -262,6 +310,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [
       state,
       hydrated,
+      track,
       update,
       getDay,
       setMeal,
@@ -274,6 +323,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSettings,
       setReminder,
       setPlanOverride,
+      resetTargetsForGoal,
       resetPlanOverrides,
       resetAll,
       importState,

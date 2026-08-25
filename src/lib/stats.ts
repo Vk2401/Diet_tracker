@@ -1,7 +1,13 @@
 import { addDays, daysBetween, rangeKeys, startOfWeek, todayKey } from "./date";
 import { dayTotals, goalProgressPct, resolveEntry, round } from "./nutrition";
 import { SLOT_META } from "./plan";
-import { MEAL_SLOTS, type AppState, type MealSlot } from "./types";
+import { directionOf, paceOf, trackOf, type PaceState } from "./goal";
+import { MEAL_SLOTS, type AppState, type GoalDirection, type MealSlot } from "./types";
+
+/** The goal direction implied by the user's start and goal weight. */
+export function directionOfState(state: AppState): GoalDirection {
+  return directionOf(state.profile.startWeightKg, state.profile.goalWeightKg);
+}
 
 export type WeightSeriesPoint = { date: string; kg: number };
 
@@ -87,6 +93,8 @@ export const STATUS_LABEL: Record<AdherenceStatus, string> = {
 
 export type WeeklyReport = {
   window: WeekWindow;
+  direction: GoalDirection;
+  pace: PaceState;
   /** Days in the window that have already happened. */
   trackedDays: number;
   weight: WeeklyWeight;
@@ -107,6 +115,8 @@ export type WeeklyReport = {
 
 export function buildWeeklyReport(state: AppState, win: WeekWindow): WeeklyReport {
   const today = todayKey();
+  const direction = directionOfState(state);
+  const track = trackOf(direction);
   const days = rangeKeys(win.start, win.end).filter((d) => d <= today);
   const trackedDays = days.length;
 
@@ -119,14 +129,14 @@ export function buildWeeklyReport(state: AppState, win: WeekWindow): WeeklyRepor
 
   for (const date of days) {
     const log = state.days[date];
-    const totals = dayTotals(log, date, state.planOverrides);
+    const totals = dayTotals(log, date, state.planOverrides, track);
     mealsCompleted += totals.completed;
     kcalSum += totals.kcal;
     proteinSum += totals.protein;
     if (totals.waterMl >= state.profile.waterTargetMl.min) waterTargetDays += 1;
 
     for (const slot of MEAL_SLOTS) {
-      const entry = resolveEntry(log, date, slot, state.planOverrides);
+      const entry = resolveEntry(log, date, slot, state.planOverrides, track);
       const isPast = date < today;
       if (entry.status === "skipped" || (isPast && entry.status === "planned")) {
         missed.set(slot, (missed.get(slot) ?? 0) + 1);
@@ -153,12 +163,20 @@ export function buildWeeklyReport(state: AppState, win: WeekWindow): WeeklyRepor
   const improvements: string[] = [];
   if (avgCalories < state.profile.calorieTarget.min) {
     improvements.push(
-      `Average intake is ${state.profile.calorieTarget.min - avgCalories} kcal below target — add an extra shake or bedtime milk.`,
+      direction === "lose"
+        ? `Average intake is ${state.profile.calorieTarget.min - avgCalories} kcal below target — eating too little stalls progress and costs lean mass.`
+        : `Average intake is ${state.profile.calorieTarget.min - avgCalories} kcal below target — add an extra shake or bedtime milk.`,
+    );
+  } else if (avgCalories > state.profile.calorieTarget.max) {
+    improvements.push(
+      direction === "lose"
+        ? `Average intake is ${avgCalories - state.profile.calorieTarget.max} kcal above target — tighten evening portions before cutting a whole meal.`
+        : `Average intake is ${avgCalories - state.profile.calorieTarget.max} kcal above target, which is fine on a gain plan as long as the weekly pace holds.`,
     );
   }
   if (avgProtein < state.profile.proteinTarget.min) {
     improvements.push(
-      `Protein is averaging ${avgProtein} g against a ${state.profile.proteinTarget.min} g target — keep paneer, curd or chicken portions full.`,
+      `Protein is averaging ${avgProtein} g against a ${state.profile.proteinTarget.min} g target — keep paneer, curd, chana or chicken portions full.`,
     );
   }
   if (hydrationAdherence < 70) {
@@ -174,10 +192,14 @@ export function buildWeeklyReport(state: AppState, win: WeekWindow): WeeklyRepor
   }
   if (!improvements.length) improvements.push("Everything is tracking well — keep the routine steady.");
 
+  const weight = weeklyWeight(state, win);
+
   return {
     window: win,
+    direction,
+    pace: paceOf(weight.change, state.profile.weeklyChangeTarget, direction),
     trackedDays,
-    weight: weeklyWeight(state, win),
+    weight,
     mealsCompleted,
     mealsPossible,
     mealAdherence,
@@ -197,6 +219,7 @@ export function buildWeeklyReport(state: AppState, win: WeekWindow): WeeklyRepor
 }
 
 export type ProgressSummary = {
+  direction: GoalDirection;
   startWeight: number;
   goalWeight: number;
   current: number;
@@ -213,6 +236,7 @@ export type ProgressSummary = {
 
 export function progressSummary(state: AppState): ProgressSummary {
   const { startWeightKg, goalWeightKg, startDate } = state.profile;
+  const direction = directionOfState(state);
   const current = currentWeight(state);
   const win = weekWindow(todayKey(), state.settings.weekStartsOn);
   const w = weeklyWeight(state, win);
@@ -240,11 +264,13 @@ export function progressSummary(state: AppState): ProgressSummary {
   }
 
   return {
+    direction,
     startWeight: startWeightKg,
     goalWeight: goalWeightKg,
     current,
     totalChange: round(current - startWeightKg, 2),
-    remaining: round(goalWeightKg - current, 2),
+    /** Distance still to cover, always non-negative regardless of direction. */
+    remaining: round(Math.abs(goalWeightKg - current), 2),
     goalProgress: Math.max(0, Math.min(100, goalProgressPct(current, startWeightKg, goalWeightKg))),
     weeklyAverage: w.average,
     previousWeeklyAverage: w.previousAverage,

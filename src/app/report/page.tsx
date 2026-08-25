@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { formatShort, relativeDayLabel, todayKey } from "@/lib/date";
 import { STATUS_LABEL, buildWeeklyReport, weekWindow, type AdherenceStatus } from "@/lib/stats";
+import { formatChange, paceLabel } from "@/lib/goal";
 import TopBar from "@/components/TopBar";
 import { Bar, Pill, Ring, SectionTitle, Stat, type Tone } from "@/components/ui";
 import {
@@ -123,17 +124,23 @@ export default function ReportPage() {
                   value={
                     report.weight.change === undefined
                       ? "—"
-                      : `${report.weight.change >= 0 ? "+" : ""}${report.weight.change.toFixed(2)}`
+                      : formatChange(report.weight.change)
                   }
                   unit="kg"
                   tone={
-                    report.weight.change === undefined
-                      ? "neutral"
-                      : report.weight.change >= profile.weeklyGainTarget.min
-                        ? "brand"
-                        : "accent"
+                    report.pace === "on-pace"
+                      ? "brand"
+                      : report.pace === "unknown"
+                        ? "neutral"
+                        : report.pace === "reverse"
+                          ? "danger"
+                          : "accent"
                   }
-                  sub={`vs ${report.weight.previousAverage?.toFixed(2) ?? "—"} kg last week`}
+                  sub={
+                    report.weight.change === undefined
+                      ? paceLabel(report.pace, report.direction)
+                      : `${paceLabel(report.pace, report.direction)} · vs ${report.weight.previousAverage?.toFixed(2) ?? "—"} kg last week`
+                  }
                 />
               </div>
             </section>
