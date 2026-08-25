@@ -1,0 +1,357 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ *
+ * Design tokens
+ * ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+
+  --bg: #f6f7f5;
+  --bg-elevated: #ffffff;
+  --bg-sunken: #eceee9;
+  --surface: #ffffff;
+  --surface-2: #f2f4f0;
+  --border: #e2e5dd;
+  --border-strong: #cdd2c6;
+
+  --text: #161d18;
+  --text-muted: #5d6a60;
+  --text-faint: #8b968e;
+
+  --brand: #12805c;
+  --brand-strong: #0c6547;
+  --brand-soft: #dff2e9;
+  --brand-contrast: #ffffff;
+
+  --accent: #c2700c;
+  --accent-soft: #fdefd9;
+
+  --water: #1d76b8;
+  --water-soft: #ddeefb;
+
+  --protein: #8347c4;
+  --protein-soft: #eee3fb;
+
+  --danger: #b3341f;
+  --danger-soft: #fbe4df;
+
+  --success: #12805c;
+  --warn: #c2700c;
+
+  /* Chart series — validated for CVD separation and contrast on this surface. */
+  --chart-1: #12805c;
+  --chart-2: #5a4fcf;
+  --chart-grid: #e2e5dd;
+  --chart-goal: #8b968e;
+
+  --shadow-sm: 0 1px 2px rgb(20 30 22 / 0.06);
+  --shadow-md: 0 4px 16px -4px rgb(20 30 22 / 0.1), 0 1px 3px rgb(20 30 22 / 0.05);
+  --shadow-lg: 0 18px 40px -18px rgb(20 30 22 / 0.28);
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-lg: 26px;
+
+  --nav-h: 68px;
+}
+
+:root[data-theme="dark"],
+:root:not([data-theme="light"]) {
+  /* placeholder so the cascade below can override cleanly */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #0d1210;
+    --bg-elevated: #151c18;
+    --bg-sunken: #090d0b;
+    --surface: #151c18;
+    --surface-2: #1d2721;
+    --border: #263029;
+    --border-strong: #36443b;
+
+    --text: #e8f0ea;
+    --text-muted: #9aa9a0;
+    --text-faint: #6d7b73;
+
+    --brand: #3ddc97;
+    --brand-strong: #63e8ae;
+    --brand-soft: #12301f;
+    --brand-contrast: #05170f;
+
+    --accent: #f0b046;
+    --accent-soft: #2e2413;
+
+    --water: #56b6f5;
+    --water-soft: #10283a;
+
+    --protein: #b689f0;
+    --protein-soft: #241a35;
+
+    --danger: #f2765c;
+    --danger-soft: #331813;
+
+    --success: #3ddc97;
+    --warn: #f0b046;
+
+    --chart-1: #26a874;
+    --chart-2: #8f68d8;
+    --chart-grid: #263029;
+    --chart-goal: #6d7b73;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 16px -4px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 18px 40px -18px rgb(0 0 0 / 0.7);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0d1210;
+  --bg-elevated: #151c18;
+  --bg-sunken: #090d0b;
+  --surface: #151c18;
+  --surface-2: #1d2721;
+  --border: #263029;
+  --border-strong: #36443b;
+
+  --text: #e8f0ea;
+  --text-muted: #9aa9a0;
+  --text-faint: #6d7b73;
+
+  --brand: #3ddc97;
+  --brand-strong: #63e8ae;
+  --brand-soft: #12301f;
+  --brand-contrast: #05170f;
+
+  --accent: #f0b046;
+  --accent-soft: #2e2413;
+
+  --water: #56b6f5;
+  --water-soft: #10283a;
+
+  --protein: #b689f0;
+  --protein-soft: #241a35;
+
+  --danger: #f2765c;
+  --danger-soft: #331813;
+
+  --success: #3ddc97;
+  --warn: #f0b046;
+
+  --chart-1: #26a874;
+  --chart-2: #8f68d8;
+  --chart-grid: #263029;
+  --chart-goal: #6d7b73;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 16px -4px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 18px 40px -18px rgb(0 0 0 / 0.7);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-sunken: var(--bg-sunken);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-ink-muted: var(--text-muted);
+  --color-ink-faint: var(--text-faint);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-water: var(--water);
+  --color-water-soft: var(--water-soft);
+  --color-protein: var(--protein);
+  --color-protein-soft: var(--protein-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --radius-card: var(--radius);
+  --radius-pill: 999px;
+  --font-sans: var(--font-app), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ------------------------------------------------------------------ *
+ * Base
+ * ------------------------------------------------------------------ */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-app), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+  min-height: 100dvh;
+}
+
+/* Tabular figures keep dashboard numbers from jittering as they update. */
+.num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ------------------------------------------------------------------ *
+ * Components
+ * ------------------------------------------------------------------ */
+@utility card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+@utility field {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--brand);
+  background: var(--surface);
+}
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.925rem;
+  border: 1px solid transparent;
+  transition: transform 0.12s ease, opacity 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.975);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@utility btn-primary {
+  background: var(--brand);
+  color: var(--brand-contrast);
+}
+
+@utility btn-ghost {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+@utility btn-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ *
+ * Motion
+ * ------------------------------------------------------------------ */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: rise 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.86); }
+  60% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+.animate-pop {
+  animation: pop 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Hide scrollbars on horizontal chip rails while keeping them scrollable. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--nav-h) + 1rem);
+}
