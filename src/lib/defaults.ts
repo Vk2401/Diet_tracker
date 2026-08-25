@@ -4,7 +4,7 @@ import type { AppState, Profile, Reminder, Settings } from "./types";
 
 /** Kept from v1 so existing installs keep their history. */
 export const STORAGE_KEY = "hwg-tracker-state";
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 export const DEFAULT_PROFILE: Profile = {
   name: "",
@@ -47,5 +47,6 @@ export function makeInitialState(): AppState {
     reminders: DEFAULT_REMINDERS.map((r) => ({ ...r })),
     days: {},
     planOverrides: {},
+    customOptions: {},
   };
 }

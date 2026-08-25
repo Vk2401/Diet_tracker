@@ -1,6 +1,6 @@
 import { addDays, daysBetween, rangeKeys, startOfWeek, todayKey } from "./date";
 import { dayTotals, goalProgressPct, resolveEntry, round } from "./nutrition";
-import { SLOT_META } from "./plan";
+import { SLOT_META, buildOptionIndex } from "./plan";
 import { directionOf, paceOf, trackOf, type PaceState } from "./goal";
 import { MEAL_SLOTS, type AppState, type GoalDirection, type MealSlot } from "./types";
 
@@ -117,6 +117,7 @@ export function buildWeeklyReport(state: AppState, win: WeekWindow): WeeklyRepor
   const today = todayKey();
   const direction = directionOfState(state);
   const track = trackOf(direction);
+  const index = buildOptionIndex(state.customOptions);
   const days = rangeKeys(win.start, win.end).filter((d) => d <= today);
   const trackedDays = days.length;
 
@@ -129,7 +130,7 @@ export function buildWeeklyReport(state: AppState, win: WeekWindow): WeeklyRepor
 
   for (const date of days) {
     const log = state.days[date];
-    const totals = dayTotals(log, date, state.planOverrides, track);
+    const totals = dayTotals(log, date, state.planOverrides, track, index);
     mealsCompleted += totals.completed;
     kcalSum += totals.kcal;
     proteinSum += totals.protein;

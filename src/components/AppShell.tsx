@@ -20,17 +20,25 @@ export default function AppShell({ children }: { children: ReactNode }) {
     else root.setAttribute("data-theme", theme);
   }, [state.settings.theme]);
 
-  // Send first-run users to onboarding; keep everyone else out of it.
+  const onboarded = state.profile.onboarded;
+  const atOnboarding = pathname === "/onboarding";
+
+  // Both directions: first run goes to onboarding, and anyone already set up
+  // is kept out of it (a bookmark or a back-swipe must not restart setup).
+  const needsOnboarding = !onboarded && !atOnboarding;
+  const alreadyOnboarded = onboarded && atOnboarding;
+
   useEffect(() => {
     if (!hydrated) return;
-    if (!state.profile.onboarded && pathname !== "/onboarding") {
-      router.replace("/onboarding");
-    }
-  }, [hydrated, state.profile.onboarded, pathname, router]);
+    if (needsOnboarding) router.replace("/onboarding");
+    else if (alreadyOnboarded) router.replace("/");
+  }, [hydrated, needsOnboarding, alreadyOnboarded, router]);
 
   const bare = NO_CHROME.includes(pathname);
 
-  if (!hydrated) {
+  // Hold the loader until state is read AND any redirect has settled, so a
+  // first-run user never sees an empty dashboard flash behind onboarding.
+  if (!hydrated || needsOnboarding || alreadyOnboarded) {
     return (
       <div className="grid min-h-dvh place-items-center">
         <div

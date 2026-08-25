@@ -14,11 +14,12 @@ import { RECOMMENDED_TARGETS } from "./goal";
 import { STORAGE_KEY, STATE_VERSION, makeInitialState } from "./defaults";
 import { todayKey } from "./date";
 import { makeEntry } from "./nutrition";
-import { overrideKey, plannedOptionId } from "./plan";
+import { buildOptionIndex, overrideKey, plannedOptionId, type OptionIndex } from "./plan";
 import { directionOf, trackOf, type PlanTrack } from "./goal";
 import { weekdayOf } from "./date";
 import type {
   AppState,
+  CustomMealOption,
   DayLog,
   MealEntry,
   MealSlot,
@@ -32,6 +33,8 @@ type Ctx = {
   hydrated: boolean;
   /** Which meal plan the current start/goal weights imply. */
   track: PlanTrack;
+  /** Built-in options merged with the user's custom ones. */
+  options: OptionIndex;
   update: (fn: (draft: AppState) => void) => void;
   getDay: (date: string) => DayLog;
   setMeal: (date: string, slot: MealSlot, patch: Partial<MealEntry>) => void;
@@ -44,6 +47,10 @@ type Ctx = {
   setSettings: (patch: Partial<Settings>) => void;
   setReminder: (id: string, patch: Partial<Reminder>) => void;
   setPlanOverride: (weekday: number, slot: MealSlot, optionId: string) => void;
+  clearPlanOverride: (weekday: number, slot: MealSlot) => void;
+  saveCustomOption: (option: CustomMealOption) => void;
+  deleteCustomOption: (id: string) => { archived: boolean };
+  isOptionInUse: (id: string) => boolean;
   resetTargetsForGoal: () => void;
   resetPlanOverrides: () => void;
   resetAll: () => void;
@@ -85,6 +92,7 @@ function migrate(raw: unknown): AppState {
   return {
     version: STATE_VERSION,
     profile,
+    customOptions: parsed.customOptions ?? {},
     settings: { ...base.settings, ...(parsed.settings ?? {}) },
     // Keep the user's schedule but always take the current wording.
     reminders: base.reminders.map((r) => {
@@ -129,6 +137,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [state, hydrated]);
 
   const track = trackOf(directionOf(state.profile.startWeightKg, state.profile.goalWeightKg));
+  const options = useMemo(() => buildOptionIndex(state.customOptions), [state.customOptions]);
 
   const update = useCallback((fn: (draft: AppState) => void) => {
     setState((prev) => {
@@ -247,6 +256,59 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [update],
   );
 
+  const clearPlanOverride = useCallback(
+    (weekday: number, slot: MealSlot) =>
+      update((d) => {
+        const t = trackOf(directionOf(d.profile.startWeightKg, d.profile.goalWeightKg));
+        delete d.planOverrides[overrideKey(t, weekday, slot)];
+      }),
+    [update],
+  );
+
+  const saveCustomOption = useCallback(
+    (option: CustomMealOption) =>
+      update((d) => {
+        d.customOptions[option.id] = { ...option, custom: true };
+      }),
+    [update],
+  );
+
+  /** True when any logged day still references this option. */
+  const isOptionInUse = useCallback(
+    (id: string) =>
+      Object.values(state.days).some((day) =>
+        Object.values(day.meals ?? {}).some((m) => m?.optionId === id),
+      ),
+    [state.days],
+  );
+
+  /**
+   * Deleting an option the user has already eaten would rewrite history, so a
+   * referenced option is archived instead: it leaves the pickers but still
+   * resolves for past logs. Anything unreferenced is removed outright.
+   */
+  const deleteCustomOption = useCallback(
+    (id: string) => {
+      const inUse = Object.values(state.days).some((day) =>
+        Object.values(day.meals ?? {}).some((m) => m?.optionId === id),
+      );
+      update((d) => {
+        if (inUse) {
+          const existing = d.customOptions[id];
+          if (existing) existing.archived = true;
+        } else {
+          delete d.customOptions[id];
+        }
+        // Any plan slot pointing at it falls back to the built-in default.
+        for (const [key, value] of Object.entries(d.planOverrides)) {
+          if (value === id) delete d.planOverrides[key];
+        }
+      });
+      return { archived: inUse };
+    },
+    [state.days, update],
+  );
+
   /** Re-applies the recommended targets for the current goal direction. */
   const resetTargetsForGoal = useCallback(
     () =>
@@ -290,6 +352,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       state,
       hydrated,
       track,
+      options,
       update,
       getDay,
       setMeal,
@@ -302,6 +365,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSettings,
       setReminder,
       setPlanOverride,
+      clearPlanOverride,
+      saveCustomOption,
+      deleteCustomOption,
+      isOptionInUse,
       resetTargetsForGoal,
       resetPlanOverrides,
       resetAll,
@@ -311,6 +378,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       state,
       hydrated,
       track,
+      options,
       update,
       getDay,
       setMeal,
@@ -323,6 +391,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSettings,
       setReminder,
       setPlanOverride,
+      clearPlanOverride,
+      saveCustomOption,
+      deleteCustomOption,
+      isOptionInUse,
       resetTargetsForGoal,
       resetPlanOverrides,
       resetAll,

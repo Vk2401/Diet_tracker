@@ -1,4 +1,4 @@
-import { OPTION_BY_ID, plannedOptionId } from "./plan";
+import { BUILTIN_BY_ID, plannedOptionId, type OptionIndex } from "./plan";
 import type { PlanTrack } from "./goal";
 import { weekdayOf } from "./date";
 import { MEAL_SLOTS, type DayLog, type MealEntry, type MealSlot, type Range } from "./types";
@@ -9,8 +9,11 @@ export function round(n: number, dp = 0): number {
 }
 
 /** Resolves the effective calories/protein for a logged meal entry. */
-export function entryNutrition(entry: MealEntry): { kcal: number; protein: number } {
-  const opt = OPTION_BY_ID[entry.optionId];
+export function entryNutrition(
+  entry: MealEntry,
+  index: OptionIndex = BUILTIN_BY_ID,
+): { kcal: number; protein: number } {
+  const opt = index[entry.optionId];
   const factor = entry.portionFactor ?? 1;
   return {
     kcal: entry.caloriesOverride ?? round((opt?.kcal ?? 0) * factor),
@@ -51,6 +54,7 @@ export function dayTotals(
   date: string,
   planOverrides: Record<string, string>,
   track: PlanTrack = "gain",
+  index: OptionIndex = BUILTIN_BY_ID,
 ): DayTotals {
   let kcal = 0;
   let protein = 0;
@@ -60,7 +64,7 @@ export function dayTotals(
   for (const slot of MEAL_SLOTS) {
     const entry = resolveEntry(day, date, slot, planOverrides, track);
     if (entry.status === "completed") {
-      const n = entryNutrition(entry);
+      const n = entryNutrition(entry, index);
       kcal += n.kcal;
       protein += n.protein;
       completed += 1;

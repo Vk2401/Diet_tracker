@@ -1,5 +1,10 @@
 import type { PlanTrack } from "./goal";
-import { MEAL_SLOTS, type MealOption, type MealSlot } from "./types";
+import {
+  MEAL_SLOTS,
+  type CustomMealOption,
+  type MealOption,
+  type MealSlot,
+} from "./types";
 
 export const SLOT_META: Record<
   MealSlot,
@@ -839,13 +844,50 @@ export const MEAL_OPTIONS: MealOption[] = [
   },
 ];
 
-export const OPTION_BY_ID: Record<string, MealOption> = Object.fromEntries(
+/** Built-in options only. Use `buildOptionIndex` to include the user's own. */
+export const BUILTIN_BY_ID: Record<string, MealOption> = Object.fromEntries(
   MEAL_OPTIONS.map((o) => [o.id, o]),
 );
 
-/** Alternatives offered for a slot, scoped to the active plan. */
-export function optionsForSlot(slot: MealSlot, track: PlanTrack = "gain"): MealOption[] {
-  return MEAL_OPTIONS.filter((o) => o.slot === slot && o.track === track);
+/** Every option resolvable right now — built-ins plus the user's custom ones. */
+export type OptionIndex = Record<string, MealOption>;
+
+export function buildOptionIndex(custom: Record<string, CustomMealOption> = {}): OptionIndex {
+  return { ...BUILTIN_BY_ID, ...custom };
+}
+
+export function isCustom(option: MealOption | undefined): option is CustomMealOption {
+  return !!option && (option as CustomMealOption).custom === true;
+}
+
+/**
+ * Alternatives offered for a slot on a track. Archived custom options are
+ * excluded here but stay in the index so past logs still resolve.
+ */
+export function optionsForSlot(
+  index: OptionIndex,
+  slot: MealSlot,
+  track: PlanTrack = "gain",
+): MealOption[] {
+  return Object.values(index)
+    .filter((o) => o.slot === slot && o.track === track && !(isCustom(o) && o.archived))
+    .sort((a, b) => Number(isCustom(a)) - Number(isCustom(b)));
+}
+
+/** A blank custom option for a slot, ready for the editor. */
+export function draftOption(slot: MealSlot, track: PlanTrack): CustomMealOption {
+  return {
+    id: `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    slot,
+    track,
+    label: "",
+    items: [],
+    kcal: 0,
+    protein: 0,
+    portion: "1 serving",
+    custom: true,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 export const WEEKDAY_NAMES = [
@@ -1002,10 +1044,11 @@ export function plannedDayTotals(
   track: PlanTrack,
   weekday: number,
   overrides: Record<string, string> = {},
+  index: OptionIndex = BUILTIN_BY_ID,
 ): { kcal: number; protein: number } {
   return MEAL_SLOTS.reduce(
     (acc, slot) => {
-      const opt = OPTION_BY_ID[plannedOptionId(track, weekday, slot, overrides)];
+      const opt = index[plannedOptionId(track, weekday, slot, overrides)];
       return { kcal: acc.kcal + (opt?.kcal ?? 0), protein: acc.protein + (opt?.protein ?? 0) };
     },
     { kcal: 0, protein: 0 },

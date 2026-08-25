@@ -7,12 +7,12 @@ import {
   nextReminder,
   notificationSupport,
   occurrences,
-  requestPermission,
   type PermissionState,
 } from "@/lib/notifications";
 import TopBar from "@/components/TopBar";
+import NotificationStatus from "@/components/NotificationStatus";
 import { Pill, SectionTitle } from "@/components/ui";
-import { IconBell, IconCheck, IconClock } from "@/components/icons";
+import { IconCheck, IconClock } from "@/components/icons";
 
 export default function RemindersPage() {
   const { state, setReminder } = useStore();
@@ -35,42 +35,9 @@ export default function RemindersPage() {
 
       <main className="space-y-5 px-4 pt-4">
         {/* ---- Permission ---------------------------------------------- */}
-        {perm !== "granted" && (
-          <section className="card animate-rise p-4">
-            <div className="flex items-start gap-3">
-              <span
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-pill"
-                style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-              >
-                <IconBell width={19} height={19} />
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-bold">
-                  {perm === "denied"
-                    ? "Notifications are blocked"
-                    : perm === "unsupported"
-                      ? "Notifications unavailable"
-                      : "Turn on notifications"}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-                  {perm === "denied"
-                    ? "Your browser is blocking notifications for this site. Allow them in the site settings, then reload."
-                    : perm === "unsupported"
-                      ? "This browser can't show notifications. The schedule below still tells you what's due when."
-                      : "Allow notifications so meal, weigh-in and water reminders reach you."}
-                </p>
-                {perm === "default" && (
-                  <button
-                    onClick={async () => setPerm(await requestPermission())}
-                    className="btn btn-primary mt-3 !py-2 !text-xs"
-                  >
-                    Allow notifications
-                  </button>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
+        <section className="card animate-rise p-4">
+          <NotificationStatus compact />
+        </section>
 
         {perm === "granted" && next && (
           <section

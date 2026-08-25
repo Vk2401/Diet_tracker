@@ -6,6 +6,7 @@ import { useStore } from "@/lib/store";
 import { todayKey } from "@/lib/date";
 import { usePwa } from "@/components/PwaProvider";
 import TopBar from "@/components/TopBar";
+import NotificationStatus from "@/components/NotificationStatus";
 import { SectionTitle } from "@/components/ui";
 import { IconCheck, IconDownload, IconInstall, IconTrend, IconUpload } from "@/components/icons";
 import { DIRECTION_COPY, RECOMMENDED_TARGETS, directionOf } from "@/lib/goal";
@@ -169,6 +170,12 @@ export default function SettingsPage() {
               Use negative numbers for a loss goal — e.g. −0.5 to −0.25 kg a week.
             </p>
           </div>
+        </section>
+
+        {/* ---- Notifications ---------------------------------------------- */}
+        <section className="card p-4">
+          <SectionTitle title="Reminders & notifications" />
+          <NotificationStatus />
         </section>
 
         {/* ---- Preferences ------------------------------------------------ */}

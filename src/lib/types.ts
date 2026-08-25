@@ -46,6 +46,14 @@ export type MealEntry = {
   notes?: string;
 };
 
+/** A meal option the user created. Kept in state rather than in the catalog. */
+export type CustomMealOption = MealOption & {
+  custom: true;
+  /** Archived options stay resolvable for history but leave the pickers. */
+  archived?: boolean;
+  createdAt: string;
+};
+
 export type DayLog = {
   /** YYYY-MM-DD in local time. */
   date: string;
@@ -98,4 +106,6 @@ export type AppState = {
   /** Per-slot plan overrides, keyed `${track}:${weekday}:${slot}` so the gain
    * and loss plans keep separate customisations. */
   planOverrides: Record<string, string>;
+  /** User-created meal options, keyed by id. */
+  customOptions: Record<string, CustomMealOption>;
 };

@@ -4,29 +4,47 @@ import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { formatTime, todayKey, weekdayOf } from "@/lib/date";
 import {
-  OPTION_BY_ID,
   SLOT_META,
   WEEKDAY_NAMES,
+  draftOption,
+  isCustom,
   optionsForSlot,
   overrideKey,
   plannedDayTotals,
   plannedOptionId,
 } from "@/lib/plan";
-import { MEAL_SLOTS, type MealSlot } from "@/lib/types";
+import { MEAL_SLOTS, type CustomMealOption, type MealSlot } from "@/lib/types";
 import { DIRECTION_COPY } from "@/lib/goal";
 import { directionOfState } from "@/lib/stats";
 import TopBar from "@/components/TopBar";
 import { Pill } from "@/components/ui";
-import { IconCheck, IconClose, IconSwap } from "@/components/icons";
+import { IconCheck, IconClose, IconEdit, IconPlus, IconSwap } from "@/components/icons";
+import MealOptionEditor from "@/components/MealOptionEditor";
 
 const ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday-first
 
 export default function PlanPage() {
-  const { state, track, setPlanOverride, resetPlanOverrides } = useStore();
+  const {
+    state,
+    track,
+    options,
+    setPlanOverride,
+    clearPlanOverride,
+    saveCustomOption,
+    deleteCustomOption,
+    resetPlanOverrides,
+  } = useStore();
   const [weekday, setWeekday] = useState(weekdayOf(todayKey()));
   const [editing, setEditing] = useState<MealSlot | null>(null);
+  const [draft, setDraft] = useState<{ option: CustomMealOption; isNew: boolean } | null>(null);
+  const [toast, setToast] = useState("");
 
-  const totals = plannedDayTotals(track, weekday, state.planOverrides);
+  const flash = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2600);
+  };
+
+  const totals = plannedDayTotals(track, weekday, state.planOverrides, options);
   const { calorieTarget, proteinTarget } = state.profile;
   const customised = Object.keys(state.planOverrides).filter((k) => k.startsWith(`${track}:`)).length;
 
@@ -109,7 +127,7 @@ export default function PlanPage() {
         <div className="space-y-2.5">
           {MEAL_SLOTS.map((slot, index) => {
             const optionId = plannedOptionId(track, weekday, slot, state.planOverrides);
-            const option = OPTION_BY_ID[optionId];
+            const option = options[optionId];
             const isEditing = editing === slot;
             const overridden = !!state.planOverrides[overrideKey(track, weekday, slot)];
 
@@ -158,40 +176,81 @@ export default function PlanPage() {
                       Alternatives
                     </p>
                     <div className="space-y-1.5">
-                      {optionsForSlot(slot, track).map((alt) => {
+                      {optionsForSlot(options, slot, track).map((alt) => {
                         const active = alt.id === optionId;
+                        const mine = isCustom(alt);
                         return (
-                          <button
+                          <div
                             key={alt.id}
-                            onClick={() => {
-                              setPlanOverride(weekday, slot, alt.id);
-                              setEditing(null);
-                            }}
-                            className="flex w-full items-center gap-2.5 rounded-[12px] p-2.5 text-left"
+                            className="flex items-center gap-1 rounded-[12px] pr-1.5"
                             style={{ background: active ? "var(--brand-soft)" : "var(--surface)" }}
                           >
-                            <span
-                              className="grid h-4.5 w-[18px] shrink-0 place-items-center rounded-pill border"
-                              style={{
-                                height: 18,
-                                borderColor: active ? "var(--brand)" : "var(--border-strong)",
-                                background: active ? "var(--brand)" : "transparent",
-                                color: "var(--brand-contrast)",
+                            <button
+                              onClick={() => {
+                                setPlanOverride(weekday, slot, alt.id);
+                                setEditing(null);
                               }}
+                              className="flex min-w-0 flex-1 items-center gap-2.5 p-2.5 text-left"
                             >
-                              {active && <IconCheck width={10} height={10} />}
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="block text-[0.8rem] font-medium leading-snug">
-                                {alt.label}
+                              <span
+                                className="grid w-[18px] shrink-0 place-items-center rounded-pill border"
+                                style={{
+                                  height: 18,
+                                  borderColor: active ? "var(--brand)" : "var(--border-strong)",
+                                  background: active ? "var(--brand)" : "transparent",
+                                  color: "var(--brand-contrast)",
+                                }}
+                              >
+                                {active && <IconCheck width={10} height={10} />}
                               </span>
-                              <span className="num text-[0.7rem] text-ink-faint">
-                                {alt.kcal} kcal · {alt.protein} g
+                              <span className="min-w-0 flex-1">
+                                <span className="flex items-center gap-1.5">
+                                  <span className="text-[0.8rem] font-medium leading-snug">
+                                    {alt.label}
+                                  </span>
+                                  {mine && <Pill tone="accent">Mine</Pill>}
+                                </span>
+                                <span className="num text-[0.7rem] text-ink-faint">
+                                  {alt.kcal} kcal · {alt.protein} g
+                                </span>
                               </span>
-                            </span>
-                          </button>
+                            </button>
+                            {mine && (
+                              <button
+                                onClick={() => setDraft({ option: alt as CustomMealOption, isNew: false })}
+                                aria-label={`Edit ${alt.label}`}
+                                className="grid h-7 w-7 shrink-0 place-items-center rounded-pill text-ink-faint"
+                                style={{ background: "var(--surface-2)" }}
+                              >
+                                <IconEdit width={13} height={13} />
+                              </button>
+                            )}
+                          </div>
                         );
                       })}
+
+                      <button
+                        onClick={() => setDraft({ option: draftOption(slot, track), isNew: true })}
+                        className="flex w-full items-center gap-2.5 rounded-[12px] border border-dashed p-2.5 text-left"
+                        style={{ borderColor: "var(--border-strong)", color: "var(--brand)" }}
+                      >
+                        <span className="grid w-[18px] shrink-0 place-items-center" style={{ height: 18 }}>
+                          <IconPlus width={13} height={13} />
+                        </span>
+                        <span className="text-[0.8rem] font-semibold">Create your own meal</span>
+                      </button>
+
+                      {overridden && (
+                        <button
+                          onClick={() => {
+                            clearPlanOverride(weekday, slot);
+                            setEditing(null);
+                          }}
+                          className="w-full rounded-[12px] p-2.5 text-left text-[0.78rem] font-semibold text-ink-faint"
+                        >
+                          Reset this slot to the default plan
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -205,6 +264,50 @@ export default function PlanPage() {
           original record.
         </p>
       </main>
+
+      {draft && (
+        <MealOptionEditor
+          draft={draft.option}
+          isNew={draft.isNew}
+          onClose={() => setDraft(null)}
+          onSave={(option) => {
+            saveCustomOption(option);
+            // A freshly created meal goes straight into the slot being edited.
+            if (draft.isNew) setPlanOverride(weekday, option.slot, option.id);
+            setDraft(null);
+            setEditing(null);
+            flash(draft.isNew ? "Meal added to your plan" : "Meal updated");
+          }}
+          onDelete={
+            draft.isNew
+              ? undefined
+              : () => {
+                  const { archived } = deleteCustomOption(draft.option.id);
+                  setDraft(null);
+                  setEditing(null);
+                  flash(
+                    archived
+                      ? "Removed from your plan — past logs keep it"
+                      : "Meal deleted",
+                  );
+                }
+          }
+        />
+      )}
+
+      {toast && (
+        <div
+          role="status"
+          className="animate-rise fixed inset-x-0 z-50 mx-auto w-fit max-w-[90%] rounded-pill px-4 py-2 text-center text-xs font-semibold shadow-[var(--shadow-lg)]"
+          style={{
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + var(--nav-h) + 1rem)",
+            background: "var(--brand)",
+            color: "var(--brand-contrast)",
+          }}
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

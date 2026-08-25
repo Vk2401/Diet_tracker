@@ -40,12 +40,12 @@ Requires Node 18.18+. No API keys, database or backend — the app is entirely c
 | `/onboarding` | Onboarding | 4 steps: welcome → weights → targets → reminders. Detects the goal direction as you type and recommends matching targets. Runs once. |
 | `/` | Today's dashboard | Meal adherence ring, calorie/protein bars, weight snapshot, six meal cards, hydration, weigh-in, notes. Steps ±2 days. |
 | `/meal/[date]/[slot]` | Meal detail | Complete/skip, portion multiplier, manual kcal/protein override, swap to an alternative, per-meal notes. |
-| `/plan` | 7-day diet plan | The recurring weekly rotation for the active direction, with per-day totals and swappable alternatives. |
+| `/plan` | 7-day diet plan | The recurring weekly rotation for the active direction, with per-day totals, swappable alternatives, and full create/edit/delete of your own meals. |
 | `/weight` | Weight tracker | Log/edit/remove daily weights, trend chart, weekly averages, goal progress, history. |
 | `/progress` | Progress dashboard | Goal ring, weight trend, 14-day averages, daily calorie bars, week-over-week averages. |
 | `/report` | Weekly adherence report | Meal adherence, weight change, macro & hydration averages, missed meals, best day, improvements. Steps back week by week. |
 | `/reminders` | Reminders | Per-reminder time + on/off, hydration cadence, notification permission. |
-| `/settings` | Settings | Profile, goal direction, editable targets, theme, glass size, week start, JSON export/import, erase all. |
+| `/settings` | Settings | Profile, goal direction, editable targets, notification status and how to fix it, theme, glass size, week start, JSON export/import, erase all. |
 
 ---
 
@@ -77,7 +77,8 @@ public/
 All data lives in `localStorage` under `hwg-tracker-state` — nothing is sent anywhere. The key is
 unchanged from v1 so existing installs keep their history; a v1 → v2 migration renames
 `weeklyGainTarget` to `weeklyChangeTarget`, namespaces plan overrides by track, backfills new
-reminders and refreshes reminder wording while preserving each user's times and on/off choices. Writes are
+reminders and refreshes reminder wording while preserving each user's times and on/off choices;
+v3 adds the `customOptions` store for user-created meals. Writes are
 debounced 200 ms so rapid taps (water, portions) don't thrash storage. Loading is deferred to a
 mount effect so server and client render the same pristine tree, and `AppShell` shows a spinner
 until hydration completes.
@@ -97,6 +98,22 @@ per-direction copy, and two helpers that keep the UI honest in both directions �
   loss goal and red on a gain goal, from one place.
 - `paceOf(change, target, direction)` — `on-pace` / `slow` / `fast` / `reverse`. A loss target is
   simply a negative range, so the same band comparison works unchanged for both.
+
+### Custom meals (plan CRUD)
+
+Beyond swapping between built-in options, you can **create, edit and delete your own meals** from
+any slot in the plan. A custom meal carries the same shape as a built-in one (name, ingredients,
+kcal, protein, portion) plus the slot and track it belongs to, so it appears as an alternative
+everywhere the built-ins do — the plan screen, the meal detail swap list, and the dashboard.
+
+Deleting needs care, because a meal you have already eaten is part of your history:
+
+- **Never eaten** → removed outright.
+- **Referenced by any logged day** → archived instead. It disappears from every picker but stays
+  resolvable, so that past day still shows the right food and the right calories.
+
+Either way, any plan slot pointing at the deleted meal falls back to the built-in default. This is
+the same guarantee as BRD §14: changing the plan never rewrites what you already logged.
 
 ### Nutrition model
 
@@ -137,12 +154,31 @@ Distance remaining is reported as an absolute value, so "kg to go" is never nega
 chart plots daily entries against a 7-day rolling average, and week-over-week change compares this
 week's mean to last week's. **No target date is ever projected** (BRD §8).
 
+### Onboarding guard
+
+`AppShell` gates both directions once state has hydrated: a user who hasn't finished setup is sent
+to `/onboarding` from any route (including a deep link or a shared URL), and a user who has is kept
+out of it, so a bookmark or a back-swipe can't restart setup. The loader is held until the redirect
+settles, so a first-run user never sees an empty dashboard flash behind onboarding.
+
 ### Reminders
 
 Eight configurable reminders (weigh-in, six meals, repeating hydration). A client-only PWA can't
 wake itself without a push server, so delivery is best-effort: due reminders fire while the app is
 open — on load, every 60 s, and on tab focus — and anything due in the last 30 minutes is caught up
 the next time you open the app. Fired reminders are de-duplicated per day.
+
+Because a browser only ever offers one permission prompt, `NotificationStatus` (shown in both
+Settings and Reminders) reports what is actually true and what to do about it:
+
+| State | What it shows |
+|---|---|
+| Allowed, reminders on | "Reminders on · N scheduled" |
+| Allowed, all reminders off | Warns that nothing will be delivered |
+| Not yet asked | An Enable button |
+| Blocked | Numbered steps for iOS / Android / desktop, since re-prompting is impossible |
+| iOS in a browser tab | Prompts to Add to Home Screen — iOS only delivers web notifications to an installed PWA |
+| Unsupported | Says so, and notes the in-app schedule still works |
 
 ### PWA
 

@@ -83,3 +83,9 @@ export const IconInstall = (p: P) => (
 export const IconSparkle = (p: P) => (
   <svg {...base} {...p}><path d="M12 3.5 13.7 9l5.5 1.7-5.5 1.7L12 18l-1.7-5.6L4.8 10.7 10.3 9z" /><path d="M18.5 3v3M20 4.5h-3" /></svg>
 );
+export const IconTrash = (p: P) => (
+  <svg {...base} {...p}><path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5M6.5 6.5 7.4 20a1.5 1.5 0 0 0 1.5 1.4h6.2a1.5 1.5 0 0 0 1.5-1.4l.9-13.5M10.5 10.5v6M13.5 10.5v6" /></svg>
+);
+export const IconEdit = (p: P) => (
+  <svg {...base} {...p}><path d="M4 20.3h4.2L19.4 9.1a2 2 0 0 0 0-2.8l-1.7-1.7a2 2 0 0 0-2.8 0L3.7 15.8V20a.3.3 0 0 0 .3.3zM14.5 6.5l3 3" /></svg>
+);

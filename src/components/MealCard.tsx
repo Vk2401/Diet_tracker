@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SLOT_META, OPTION_BY_ID } from "@/lib/plan";
+import { SLOT_META } from "@/lib/plan";
 import { entryNutrition } from "@/lib/nutrition";
 import { formatTime } from "@/lib/date";
 import type { MealEntry, MealSlot } from "@/lib/types";
@@ -26,10 +26,10 @@ export default function MealCard({
   entry: MealEntry;
   isNext?: boolean;
 }) {
-  const { setMeal } = useStore();
+  const { options, setMeal } = useStore();
   const meta = SLOT_META[slot];
-  const option = OPTION_BY_ID[entry.optionId];
-  const n = entryNutrition(entry);
+  const option = options[entry.optionId];
+  const n = entryNutrition(entry, options);
   const style = STATUS_STYLE[entry.status];
 
   const toggle = (next: "completed" | "skipped") =>

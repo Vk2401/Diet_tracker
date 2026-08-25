@@ -4,7 +4,7 @@ import { use, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { formatTime, relativeDayLabel } from "@/lib/date";
 import { entryNutrition, resolveEntry, round } from "@/lib/nutrition";
-import { OPTION_BY_ID, SLOT_META, optionsForSlot } from "@/lib/plan";
+import { SLOT_META, isCustom, optionsForSlot } from "@/lib/plan";
 import { MEAL_SLOTS, type MealSlot } from "@/lib/types";
 import TopBar from "@/components/TopBar";
 import { Pill, SectionTitle } from "@/components/ui";
@@ -18,15 +18,18 @@ export default function MealDetailPage({
   params: Promise<{ date: string; slot: string }>;
 }) {
   const { date, slot: rawSlot } = use(params);
-  const { state, track, setMeal } = useStore();
+  const { state, track, options, setMeal } = useStore();
 
   const slot = MEAL_SLOTS.includes(rawSlot as MealSlot) ? (rawSlot as MealSlot) : "breakfast";
   const meta = SLOT_META[slot];
   const entry = resolveEntry(state.days[date], date, slot, state.planOverrides, track);
-  const option = OPTION_BY_ID[entry.optionId];
-  const alternatives = useMemo(() => optionsForSlot(slot, track), [slot, track]);
-  const n = entryNutrition(entry);
-  const planned = OPTION_BY_ID[entry.optionId];
+  const option = options[entry.optionId];
+  const alternatives = useMemo(
+    () => optionsForSlot(options, slot, track),
+    [options, slot, track],
+  );
+  const n = entryNutrition(entry, options);
+  const planned = options[entry.optionId];
 
   return (
     <div className="safe-bottom">
@@ -50,7 +53,7 @@ export default function MealDetailPage({
         <section className="card animate-rise p-4">
           <p className="text-[1.02rem] font-bold leading-snug">{option?.label}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {option?.items.map((item) => (
+            {option?.items.map((item: string) => (
               <span
                 key={item}
                 className="chip"
@@ -243,7 +246,11 @@ export default function MealDetailPage({
                       {alt.kcal} kcal · {alt.protein} g protein
                     </span>
                   </span>
-                  {alt.tags?.[0] && <Pill tone="neutral">{alt.tags[0]}</Pill>}
+                  {isCustom(alt) ? (
+                    <Pill tone="accent">Mine</Pill>
+                  ) : (
+                    alt.tags?.[0] && <Pill tone="neutral">{alt.tags[0]}</Pill>
+                  )}
                 </button>
               );
             })}
